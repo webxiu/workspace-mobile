@@ -1,0 +1,30 @@
+/*
+ * @Author: lixiuhai 
+ * @Date: 2023-06-23 09:58:57 
+ * @Last Modified by:   lixiuhai 
+ * @Last Modified time: 2023-06-23 09:58:57 
+ */
+.body-container {
+  .van-cell-group {
+    .van-cell__value {
+      .van-field__body,
+      .van-field__control {
+        height: 36px;
+        line-height: 36px;
+        font-size: 28px;
+      }
+    }
+  }
+  .form-btn {
+    margin: 30px auto;
+    .btn-item {
+      display: block;
+      width: 80%;
+      margin: 0 auto;
+      border: none;
+      height: 80px;
+      line-height: 80px;
+      background: var(--main-bg-color);
+    }
+  }
+}

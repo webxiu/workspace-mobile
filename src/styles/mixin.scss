@@ -1,0 +1,88 @@
+/* **************************** 颜色 *****************************/
+@each $i in $colors {
+  // ---- 字体色 ----
+  .color-#{$i} {
+    color: #{"#" + $i};
+  }
+
+  .bg-#{$i} {
+    background-color: #{"#" + $i};
+  }
+  // ---- 背景色 ----
+  .border-b-#{$i} {
+    border-bottom: 1px solid #{"#" + $i};
+  }
+  .border-t-#{$i} {
+    border-top: 1px solid #{"#" + $i};
+  }
+}
+
+/* **************************** 粗细 *****************************/
+
+@each $i in $weights {
+  .fw-#{$i} {
+    font-weight: #{$i};
+  }
+}
+@each $i in $spaces {
+  /* **************************** 边框 *****************************/
+
+  .border-#{$i} {
+    border-radius: #{$i}px;
+  }
+  /* **************************** 字体 *****************************/
+
+  .fz-#{$i} {
+    font-size: #{$i}px;
+  }
+
+  /* **************************** margin间距 *****************************/
+
+  .m-#{$i} {
+    margin: #{$i}px;
+  }
+  .mt-#{$i} {
+    margin-top: #{$i}px;
+  }
+  .mr-#{$i} {
+    margin-right: #{$i}px;
+  }
+  .ml-#{$i} {
+    margin-left: #{$i}px;
+  }
+  .mb-#{$i} {
+    margin-bottom: #{$i}px;
+  }
+
+  /* **************************** padding间距 *****************************/
+
+  .p-#{$i} {
+    padding: #{$i}px;
+  }
+  .pt-#{$i} {
+    padding-top: #{$i}px;
+  }
+  .pr-#{$i} {
+    padding-right: #{$i}px;
+  }
+  .pl-#{$i} {
+    padding-left: #{$i}px;
+  }
+  .pb-#{$i} {
+    padding-bottom: #{$i}px;
+  }
+}
+
+/* **************************** flex  *****************************/
+
+@each $i in $flexs {
+  // flex 0.1-0.9
+  .flexf-#{$i} {
+    flex: #{"0." + $i};
+  }
+
+  // flex1-9
+  .flex-#{$i} {
+    flex: #{$i};
+  }
+}
