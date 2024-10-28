@@ -36,8 +36,8 @@
       <van-empty v-else description="暂无数据" />
       <van-back-top />
     </van-pull-refresh>
-    <van-popup v-model:show="showOpt" :style="{ padding: '25px 10px 80px' }" position="bottom" round>
-      <div>单据【{{ rowData.billNo }}】处理:</div>
+    <van-popup v-model:show="showOpt" :style="{ padding: '25px 10px 60px' }" position="bottom" round>
+      <div>{{ rowData.staffName }}-单据【{{ rowData.billNo }}】处理:</div>
       <van-row class="mt-40">
         <van-col v-for="(item, index) in optList" :key="index" :span="item.span" class="ui-ta-c">
           <van-button :type="item.type" plain :icon="item.icon" size="small" @click="onCommit(item)">{{ item.label }}</van-button>

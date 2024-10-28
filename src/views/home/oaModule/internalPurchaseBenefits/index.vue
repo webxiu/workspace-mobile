@@ -33,7 +33,7 @@
                   :title="item.commodityName"
                   :thumb="
                     item.commoditiesImages?.length > 0
-                      ? `${vPath}${item.commoditiesImages[0]?.imagefilename}`
+                      ? `/api${item.commoditiesImages[0]?.filePath}/${item.commoditiesImages[0]?.fileName}`
                       : '图片加载失败'
                   "
                   :origin-price="item.commoditiesSpecs[0]?.officialPrice"

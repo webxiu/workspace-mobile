@@ -1,161 +1,122 @@
 /*
- * @Author: Hailen
+ * @Author: lixiuhai
  * @Date: 2023-06-23 10:03:22
  * @Last Modified by: Hailen
- * @Last Modified time: 2024-09-20 11:29:43
+ * @Last Modified time: 2024-10-24 11:04:19
  */
 
-import { Base64 } from "js-base64";
-import Cookies from "js-cookie";
-import { UserInfoType } from "@/api/user/types";
-import { toParse } from "@/utils/common";
-import { useAppStoreHook } from "@/store/modules/app";
+import { LoginType, LoginUserInfoType } from "@/api/user";
 
-export const App_INFO = "app_info"; // 应用配置存储
-export const COOKIE_KEY = "Token"; // 存储登录Token
-export const USER_INFO = "user_info"; // 存储用户信息
-export const LOGIN_INFO = "login_info"; // 存储登录信息
-export const KKVIEW_URL = "kkView_url"; // 存储kkview预览地址
+import Cookies from "js-cookie";
+import { toParse } from "@/utils/common";
+
+const COOKIE_KEY = "Token";
+const LOGIN_INFO = "Login_Info";
+const KKVIEW_URL = "kkView_url";
 
 /** ==================================  存储Cookie  ================================== */
-/** 获取Cookie */
+/**
+ * 获取Cookie
+ */
 export const getCookie = () => {
   return Cookies.get(COOKIE_KEY) || "";
 };
 
-/** 设置Cookie */
+/**
+ * 设置Cookie
+ * @param cookie cookie
+ */
 export const setCookie = (cookie: string) => {
   Cookies.set(COOKIE_KEY, cookie);
 };
 
-/** 移除Cookie */
+/**
+ * 移除Cookie
+ */
 export const removeCookie = () => {
   Cookies.remove(COOKIE_KEY);
 };
 
 /** ==================================  存储用户信息  ================================== */
-
-const useInfoStorage = useLocalStorage<UserInfoType>(USER_INFO);
-/** 获取用户信息(用户名首字母大写) */
-export const getUserInfo = useInfoStorage.getItem;
-
-/** 设置用户信息 */
-export const setUserInfo = useInfoStorage.setItem;
-
-/** 移除用户信息 */
-export const removeUserInfo = useInfoStorage.removeItem;
-
-/** ==================================  存储kkview预览地址 ================================== */
-
-/** 设置kkview预览地址 */
-export const setKkViewInfo = (kkviewUrl: string) => {
-  localStorage.setItem(KKVIEW_URL, kkviewUrl);
-};
-
-/** 获取kkview预览地址 */
-export const getKkViewInfo = () => {
-  return localStorage.getItem(KKVIEW_URL);
+/**
+ * 获取用户信息(包含权限列表)
+ */
+export const getLoginInfo = (): LoginUserInfoType => {
+  return JSON.parse(localStorage.getItem(LOGIN_INFO) || "{}");
 };
 
 /**
- * 生成kkview预览地址
- * @param filePath 文件路径,/api后面的地址(xxx/name.jpg)
- * @param query 查询参数 (&aa=bb&cc=dd)
+ * 设置用户信息
+ * @param userInfo 用户信息
  */
-export const getkkViewUrl = (filePath: string, query = "") => {
-  const kkViewUrl = getKkViewInfo();
-  const vPath = `${kkViewUrl}api/${filePath}`;
-  const encodeUrl = encodeURIComponent(Base64.encode(vPath));
-  const url = kkViewUrl + "preview/onlinePreview?url=" + encodeUrl + query;
-  return url;
+export const setLoginInfo = (userInfo: LoginUserInfoType) => {
+  localStorage.setItem(LOGIN_INFO, JSON.stringify(userInfo));
 };
-
-/** ==================================  存储菜单路由信息  ================================== */
-const Router_INFO = "router_info";
-/** 获取设置的路由信息 */
-export const getRouterInfo = (): RouteConfigsTable => {
-  const data = toParse(localStorage.getItem(Router_INFO));
-  return data;
-};
-
-/** 设置路由信息(在弹窗中加载另一个页面菜单作为详情时, 根据path路径查找到菜单ID, 获取表格配置列) */
-export const setRouterInfo = (path: string, callback: () => void) => {
-  const asyncRoutes = useAppStoreHook().getAsyncRoutes;
-  const findRoute = (routes: RouteConfigsTable[], path: string): RouteConfigsTable => {
-    for (let i = 0; i < routes.length; i++) {
-      const item = routes[i];
-      if (item.path === path) {
-        return item;
-      } else if (item.children) {
-        const result = findRoute(item.children, path);
-        if (result) return result;
-      }
-    }
-  };
-  const result = findRoute(asyncRoutes, path);
-  localStorage.setItem(Router_INFO, JSON.stringify(result));
-  callback?.();
-};
-
-/** 移除路由信息 */
-export const removeRouterInfo = () => {
-  localStorage.removeItem(Router_INFO);
-};
-
-/** ==================================  通用本地存储  ================================== */
-
-/** 移除本地存储数据 */
-export function removeStorage(key) {
-  if (!key) return localStorage.clear();
-  localStorage.removeItem(key);
-}
 
 /**
- * 操作本地存储
- * @param key 存储key
- * @param isObj 是否存储对象(如果是数组, 更新只支持对象数组)
+ * 移除用户信息
  */
-export function useLocalStorage<T>(key: string, isObj = true) {
-  /**
-   * 1.获取本地存储数据
-   * @param isStr 是否返回字符串数据
-   */
-  function getItem(isStr = false): T {
-    const emptyStr = isObj ? "{}" : "[]";
-    const data = localStorage.getItem(key);
-    return isStr ? data : toParse(data || emptyStr);
-  }
+export const removeLoginInfo = () => {
+  localStorage.removeItem(LOGIN_INFO);
+};
 
-  /** 2.设置本地存储数据 */
-  function setItem(data: T) {
-    localStorage.setItem(key, JSON.stringify(data));
-    return data;
-  }
+/**
+ * 设置kkview预览url地址
+ * @param kkViewUrl url地址
+ */
+export const setKKViewUrl = (kkViewUrl: string) => {
+  localStorage.setItem(KKVIEW_URL, kkViewUrl);
+};
 
-  /**
-   * 3.更新本地存储数据
-   * @param item 更新值
-   * @param field 更新唯一字段
-   */
-  function updateItem(item: T, field?: string) {
-    let oldData = getItem();
-    if (!isObj && Array.isArray(oldData)) {
-      if (!field) throw new Error("updateItem方法缺少更新唯一字段");
-      const idx = oldData.findIndex((f) => f[field] === item[field]);
-      if (idx > -1) {
-        oldData.splice(idx, 1, item);
-      } else {
-        oldData.push(item);
-      }
-    } else {
-      oldData = { ...oldData, ...item };
-    }
-    localStorage.setItem(key, JSON.stringify(oldData));
-  }
+/**
+ * 获取kkview预览url地址
+ */
+export const getKKViewUrl = (): string => {
+  return localStorage.getItem(KKVIEW_URL) as string;
+};
 
-  /** 4.移除本地存储数据 */
-  function removeItem() {
-    removeStorage(key);
-  }
-  return { getItem, setItem, updateItem, removeItem };
+/** ==================================  存储悬浮按钮位置  ================================== */
+export interface PositionType {
+  top: number;
+  left: number;
 }
+/**
+ * 获取悬浮按钮位置
+ * @param key 存储Key
+ */
+export const getSuspendPosition = (key: string): PositionType => {
+  return JSON.parse(localStorage.getItem(key) || "{}");
+};
+
+/**
+ * 设置悬浮按钮位置
+ * @param key 存储Key
+ * @param position 用户信息
+ */
+export const setSuspendPosition = (key, position: PositionType) => {
+  localStorage.setItem(key, JSON.stringify(position));
+};
+
+/** ==================================  存储跳转回签登录  ================================== */
+const SignBackKey = "Sign_Back";
+/** 获取登录状态 */
+export const getSignBack = (): LoginType => {
+  return JSON.parse(localStorage.getItem(SignBackKey) || "{}");
+};
+
+/** 设置登录状态 */
+export const setSignBack = (data: LoginType) => {
+  localStorage.setItem(SignBackKey, JSON.stringify(data));
+};
+
+/** ==================================  存储企业微信登录code(消息卡片进入)  ================================== */
+const WeChatCode = "WeChat_Code";
+/** 获取企业微信登录code */
+export const getWeChatCode = (): { code: string; state: string } => {
+  return toParse(localStorage.getItem(WeChatCode));
+};
+
+/** 设置企业微信登录code */
+export const setWeChatCode = (data: { code: string; state: string }) => {
+  localStorage.setItem(WeChatCode, JSON.stringify(data));
+};

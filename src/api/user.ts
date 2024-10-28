@@ -2,7 +2,7 @@
  * @Author: lixiuhai
  * @Date: 2023-06-23 10:05:48
  * @Last Modified by: Hailen
- * @Last Modified time: 2024-07-09 10:45:07
+ * @Last Modified time: 2024-10-25 11:14:18
  */
 
 import { LoginUserInfoType, UserAuthItemType } from "./types";
@@ -12,6 +12,8 @@ import http from "@/utils/request";
 export type { UserAuthItemType, LoginUserInfoType };
 
 export type LoginType = { userNo: string; password: string; orgDomain?: string };
+
+/** 登录 */
 export function login(data: LoginType) {
   return http.request({ url: "/verifyuser", method: "POST", data });
 }

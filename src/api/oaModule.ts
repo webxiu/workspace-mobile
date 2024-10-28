@@ -2,7 +2,7 @@
  * @Author: lixiuhai
  * @Date: 2023-06-23 10:05:51
  * @Last Modified by: Hailen
- * @Last Modified time: 2024-10-21 16:58:27
+ * @Last Modified time: 2024-10-25 17:56:58
  */
 /**
  * 接口请求说明:
@@ -11,12 +11,28 @@
  * @returns 请求实例
  */
 
-import { AttendanceRecordItemType, FaceCollectItemType, ProdScheduleItemType, ResignApplyItemType, UserBasicInfoItemType } from "./types";
+import {
+  AttendanceRecordItemType,
+  AttendanceRecordMulItemType,
+  FaceCollectItemType,
+  HrDocItemType,
+  ProdScheduleItemType,
+  ResignApplyItemType,
+  UserBasicInfoItemType
+} from "./types";
 import http, { AxiosRequestConfig } from "@/utils/request";
 
 import axios from "axios";
 
-export type { ProdScheduleItemType, FaceCollectItemType, AttendanceRecordItemType, ResignApplyItemType, UserBasicInfoItemType };
+export type {
+  ProdScheduleItemType,
+  FaceCollectItemType,
+  AttendanceRecordItemType,
+  ResignApplyItemType,
+  UserBasicInfoItemType,
+  AttendanceRecordMulItemType,
+  HrDocItemType
+};
 
 /** 获取个人请假单列表 */
 export const getLeaveList = (params, config?: AxiosRequestConfig) => {
@@ -671,7 +687,7 @@ export const backMealCard = (params) => {
 
 /** 人事档案 - 查询接口 */
 export const fetchHrDocList = (params) => {
-  return http.request({
+  return http.request<TablePagingResType<HrDocItemType>>({
     url: "/oa/hr/staffinfo/select",
     method: "POST",
     data: params
@@ -755,6 +771,10 @@ export const getZoomList = (params) => {
 /** 打卡记录 - 列表 */
 export const attendanceRecordList = (params) => {
   return http.request<AttendanceRecordItemType[]>({ url: "/oa/hr/attendancerecord/getRecordByUser", method: "get", params });
+};
+/** 打卡记录 - 列表 */
+export const attendanceRecordAllList = (data) => {
+  return http.request<TablePagingResType<AttendanceRecordMulItemType>>({ url: "/oa/hr/attendancerecord/select", method: "post", data });
 };
 /** ======================== 面部采集 ========================*/
 

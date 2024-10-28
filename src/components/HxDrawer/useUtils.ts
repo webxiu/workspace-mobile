@@ -11,7 +11,7 @@ export function useUtils(el: HTMLElement, callback: (opt) => void) {
 
   const { start, move } = getDirection();
 
-  el.addEventListener("touchstart", (ev) => {
+  el?.addEventListener("touchstart", (ev) => {
     transition = el.style.transition;
     startX = ev.touches[0].clientX;
     startY = ev.touches[0].clientY;
@@ -21,7 +21,7 @@ export function useUtils(el: HTMLElement, callback: (opt) => void) {
     start();
   });
 
-  el.addEventListener("touchmove", (ev) => {
+  el?.addEventListener("touchmove", (ev) => {
     if (!isMoving) return;
     const touch = ev.touches[0];
     const deltaX = touch.clientX - startX;
@@ -32,7 +32,7 @@ export function useUtils(el: HTMLElement, callback: (opt) => void) {
     }
   });
 
-  el.addEventListener("touchend", (ev) => {
+  el?.addEventListener("touchend", (ev) => {
     isMoving = false;
     const endX = ev.changedTouches[0].clientX;
     const deltaX = endX - startX;

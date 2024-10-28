@@ -1,85 +1,95 @@
-import { ConfigEnv, UserConfigExport, loadEnv } from "vite";
-import { exclude, include } from "./build/optimize";
+/*
+ * @Author: lixiuhai
+ * @Date: 2023-06-23 10:00:56
+ * @Last Modified by: lixiuhai
+ * @Last Modified time: 2023-07-11 19:44:47
+ */
 
-import dayjs from "dayjs";
-import { getPluginsList } from "./build/plugins";
-import pkg from "./package.json";
-import { resolve } from "path";
-import { warpperEnv } from "./build";
+import type { ConfigEnv, UserConfigExport } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
-/** 当前执行node命令时文件夹的地址（工作目录） */
-const root: string = process.cwd();
-const timestamp = new Date().getTime();
+import legacy from "@vitejs/plugin-legacy";
+import path from "path";
+import { viteMockServe } from "vite-plugin-mock";
+import vue from "@vitejs/plugin-vue";
+import vueJsx from "@vitejs/plugin-vue-jsx";
 
-/** 路径查找 */
-const pathResolve = (dir: string): string => {
-  return resolve(__dirname, ".", dir);
-};
+interface ImportMetaEnv {
+  readonly VITE_PORT: number;
+  readonly VITE_BASE_API: string;
+  readonly VITE_ROUTER_HISTORY: "hash" | "html5";
+  readonly VITE_PUBLIC_PATH: string;
+  readonly [key: string]: any;
+}
 
-/** 设置别名 */
-const alias: Record<string, string> = {
-  "@": pathResolve("src"),
-  "@build": pathResolve("build"),
-  "~": pathResolve("")
-};
+function resolve(dir: string) {
+  return path.resolve(__dirname, dir);
+}
 
-const { dependencies, devDependencies, name, version } = pkg;
-const __APP_INFO__ = {
-  pkg: { dependencies, devDependencies, name, version },
-  lastBuildTime: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss")
-};
+// https://vitejs.dev/config/
+export default (configEnv: ConfigEnv): UserConfigExport => {
+  const viteEnv = loadEnv(configEnv.mode, process.cwd()) as ImportMetaEnv;
+  const { VITE_PORT, VITE_BASE_URL, VITE_BASE_API, VITE_PUBLIC_PATH } = viteEnv;
 
-export default ({ command, mode }: ConfigEnv): UserConfigExport => {
-  const { VITE_CDN, VITE_PORT, VITE_COMPRESSION, VITE_PUBLIC_PATH, VITE_BASE_API, VITE_BASE_URL } = warpperEnv(loadEnv(mode, root));
   return {
     base: VITE_PUBLIC_PATH,
-    root,
+    plugins: [
+      legacy({
+        targets: ["defaults", "not IE 11"]
+      }),
+      vue(),
+      // jsx、tsx语法支持
+      vueJsx(),
+      // mock支持
+      viteMockServe({
+        mockPath: "mock",
+        localEnabled: true,
+        prodEnabled: true,
+        injectCode: `
+          import { setupProdMockServer } from './mockProdServer';
+          setupProdMockServer();
+        `,
+        logger: false
+      })
+    ],
     resolve: {
-      alias
+      alias: {
+        "@": resolve("src"),
+        "~": resolve("")
+      },
+      extensions: [".js", ".ts", ".tsx", ".jsx"]
     },
-    // 服务端渲染
+    build: {
+      emptyOutDir: true,
+      outDir: "./dist",
+      chunkSizeWarningLimit: 1000, // 消除打包超过500kb警告
+      rollupOptions: {
+        input: {
+          index: resolve("index.html")
+        },
+        output: {
+          chunkFileNames: "static/js/[name]-[hash].js",
+          entryFileNames: "static/js/[name]-[hash].js",
+          assetFileNames: "static/[ext]/[name]-[hash].[ext]"
+        }
+      }
+    },
     server: {
-      hmr: true,
-      // 是否开启 https
-      https: false,
-      // 端口号
       port: VITE_PORT,
       host: "0.0.0.0",
       proxy: {
-        [VITE_BASE_API]: {
-          target: VITE_BASE_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(VITE_BASE_API, "")
-        }
+        // "/foo": "http://localhost:4567/foo",
+        // "/test": {
+        //   target: "http://api.github.com",
+        //   changeOrigin: true,
+        //   rewrite: (path) => path.replace(/^\/api/, "")
+        // },
+        // [VITE_BASE_API]: {
+        //   target: VITE_BASE_URL,
+        //   changeOrigin: true,
+        //   rewrite: (path) => path.replace(VITE_BASE_API, "")
+        // }
       }
-    },
-    plugins: getPluginsList(command, VITE_CDN, VITE_COMPRESSION),
-    // https://cn.vitejs.dev/config/dep-optimization-options.html#dep-optimization-options
-    optimizeDeps: {
-      include,
-      exclude
-    },
-    build: {
-      // outDir: "E:/project/www/api",
-      sourcemap: false,
-      // 消除打包大小超过500kb警告
-      chunkSizeWarningLimit: 4000,
-      rollupOptions: {
-        input: {
-          index: pathResolve("index.html")
-        },
-        // 静态资源分类打包
-        output: {
-          chunkFileNames: `static/js/[name]-[hash].${timestamp}.js`,
-          entryFileNames: `static/js/[name]-[hash].${timestamp}.js`,
-          assetFileNames: `static/[ext]/[name]-[hash].${timestamp}.[ext]`
-        }
-      }
-    },
-    define: {
-      __ROOT__: JSON.stringify(resolve(__dirname)),
-      __INTLIFY_PROD_DEVTOOLS__: false,
-      __APP_INFO__: JSON.stringify(__APP_INFO__)
     }
   };
 };

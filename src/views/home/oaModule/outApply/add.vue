@@ -214,9 +214,26 @@ const applyUserId = ref(""); // 申请人
 let withUserDict = reactive({});
 const gooutReason = ref(""); // 外出事由
 const startDate = ref(dayjs(new Date()).format("YYYY-MM-DD")); // 外出日期
-const startTime = ref(dayjs(new Date()).format("HH:mm")); // 外出时间
+
+const curMin = () => {
+  const minute = dayjs().minute();
+  let finalMin: string = ":00";
+
+  if (minute <= 15) {
+    finalMin = ":15";
+  } else if (minute > 15 && minute <= 30) {
+    finalMin = ":30";
+  } else if (minute > 30 && minute <= 45) {
+    finalMin = ":45";
+  } else {
+    finalMin = ":00";
+  }
+
+  return finalMin;
+};
+const startTime = ref(dayjs(new Date()).hour() + curMin()); // 外出时间
 const endDate = ref(dayjs(new Date()).format("YYYY-MM-DD")); // 返回日期
-const endTime = ref(dayjs(new Date()).format("HH:mm")); // 返回时间
+const endTime = ref(dayjs(new Date()).hour() + curMin()); // 返回时间
 const destination = ref(""); // 目的地
 const loading = ref(false);
 const vehicleSource = ref("派车");
@@ -247,7 +264,7 @@ const changeSource = (val) => {
 // 过滤日期选项
 const filterTime = (type: string, options: PickerOption[]) => {
   if (type === "minute") {
-    options = options.filter((option) => option.value === "00" || option.value === "30");
+    return options.filter((option) => Number(option.value) % 15 === 0);
   }
   return options;
 };
@@ -256,6 +273,10 @@ const filterEndTime = (type: string, options: PickerOption[]) => {
   if (type === "hour") {
     const endTimeHour = startTime.value.split(":")[0];
     return options.filter((option) => Number(option.value) >= +endTimeHour);
+  }
+
+  if (type === "minute") {
+    return options.filter((option) => Number(option.value) % 15 === 0);
   }
   return options;
 };
@@ -320,8 +341,8 @@ onMounted(() => {
 
 onBeforeRouteLeave(() => {
   // 清除操作
-  if (route.query.id && route.query.mode === "edit") return;
-  clearFormData();
+  // if (route.query.id && route.query.mode === "edit") return;
+  // clearFormData();
 });
 
 const clearFormData = () => {

@@ -2,10 +2,11 @@
  * @Author: lixiuhai
  * @Date: 2023-06-23 10:03:17
  * @Last Modified by: Hailen
- * @Last Modified time: 2024-07-09 11:33:08
+ * @Last Modified time: 2024-10-28 17:52:02
  */
 
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { getCookie, setCookie } from "@/utils/storage";
 
 import axios from "axios";
 import { getUrlParameters } from "@/utils/common";
@@ -13,7 +14,7 @@ import { showToast } from "vant";
 import { useUserStoreWithOut } from "@/store/modules/user";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BASE_API,
+  // baseURL: import.meta.env.VITE_BASE_API,
   timeout: 2 * 60 * 1000
 });
 
@@ -29,6 +30,7 @@ const STATUS_CODE = [401, 502, 504, 508, 509];
 axiosInstance.interceptors.request.use((config) => {
   // config.headers["Authorization"] = "Bearer " + getUserInfo().token;
   const queryData = getUrlParameters(location.href);
+  if (!getCookie()) setCookie(Date.now().toString());
   if (queryData.projectId) {
     const dbKey = queryData.projectId.split("/")[1];
     config.headers["dbKey"] = `/${dbKey}`;

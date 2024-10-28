@@ -1,9 +1,7 @@
 module.exports = {
   root: true,
   env: {
-    browser: true,
     node: true,
-    es6: true
   },
   globals: {
     // Ref sugar (take 2)
@@ -32,9 +30,15 @@ module.exports = {
     defineProps: "readonly",
     defineEmits: "readonly",
     defineExpose: "readonly",
-    withDefaults: "readonly"
+    withDefaults: "readonly",
   },
-  extends: ["plugin:vue/vue3-essential", "eslint:recommended", "@vue/typescript/recommended", "@vue/prettier", "@vue/eslint-config-typescript"],
+  extends: [
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/typescript/recommended",
+    "@vue/prettier",
+    "@vue/eslint-config-typescript",
+  ],
   parser: "vue-eslint-parser",
   parserOptions: {
     parser: "@typescript-eslint/parser",
@@ -43,15 +47,14 @@ module.exports = {
     jsxPragma: "React",
     ecmaFeatures: {
       jsx: true,
-      tsx: true
-    }
+    },
   },
   overrides: [
     {
       files: ["*.ts", "*.vue"],
       rules: {
-        "no-undef": "off"
-      }
+        "no-undef": "off",
+      },
     },
     {
       files: ["*.vue"],
@@ -61,13 +64,13 @@ module.exports = {
         extraFileExtensions: [".vue"],
         ecmaVersion: "latest",
         ecmaFeatures: {
-          jsx: true
-        }
+          jsx: true,
+        },
       },
       rules: {
-        "no-undef": "off"
-      }
-    }
+        "no-undef": "off",
+      },
+    },
   ],
   rules: {
     "vue/no-v-html": "off",
@@ -81,38 +84,37 @@ module.exports = {
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/no-this-alias": "off", // 关闭this起别名限制
     "vue/html-self-closing": [
       "error",
       {
         html: {
           void: "always",
           normal: "always",
-          component: "always"
+          component: "always",
         },
         svg: "always",
-        math: "always"
-      }
+        math: "always",
+      },
     ],
     "@typescript-eslint/no-unused-vars": [
       "off",
       {
         argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_"
-      }
+        varsIgnorePattern: "^_",
+      },
     ],
     "no-unused-vars": [
       "off",
       {
         argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_"
-      }
+        varsIgnorePattern: "^_",
+      },
     ],
     "prettier/prettier": [
-      "error",
+      "off",
       {
-        endOfLine: "auto"
-      }
-    ]
-  }
+        endOfLine: "auto",
+      },
+    ],
+  },
 };

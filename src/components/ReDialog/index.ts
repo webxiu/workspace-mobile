@@ -1,9 +1,24 @@
-import type { ArgsType, BtnClickDialog, ButtonProps, DialogOptions, DialogProps, EventType } from "./type";
+import { App, ref } from "vue";
+import { ButtonProps, DialogProps } from "vant";
+import type { CSSProperties, Component, VNode } from "vue";
 
-import reDialog from "./index.vue";
-import { ref } from "vue";
-import { useTimeoutFn } from "@vueuse/core";
-import { withInstall } from "@pureadmin/utils";
+import MyDialog from "./index.vue";
+import { withInstall } from "@/plugins/setupVant";
+
+type EventType = "open" | "close" | "cancel" | "confirm" | "openAutoFocus" | "closeAutoFocus";
+
+interface DialogOptions extends Partial<DialogProps> {
+  show: boolean;
+  /** 内容区组件的 `props`，可通过 `defineProps` 接收 */
+  props?: any;
+  /** 自定义内容渲染器 */
+  contentRender: ({ options, index }: { options: DialogOptions; index: number }) => VNode | Component;
+  /** `Dialog` 打开后的回调 */
+  open?: ({ options, index }: { options: DialogOptions; index: number }) => void;
+  close?: ({ options, index }: { options: DialogOptions; index: number }) => void;
+  cancel?: ({ options, index }: { options: DialogOptions; index: number }) => void;
+  confirm?: ({ options, index }: { options: DialogOptions; index: number }) => void;
+}
 
 const dialogStore = ref<Array<DialogOptions>>([]);
 
@@ -12,23 +27,19 @@ const dialogStore = ref<Array<DialogOptions>>([]);
  * 全屏显示配置class类名为: full-dialog, 移除了内容边距
  */
 const addDialog = (options: DialogOptions) => {
-  const open = () => dialogStore.value.push(Object.assign(options, { visible: true }));
-  if (options?.openDelay) {
-    useTimeoutFn(() => {
+  const open = () => {
+    dialogStore.value.push(Object.assign(options, { show: true }));
+  };
+  if (options?.lockScroll) {
+    setTimeout(() => {
       open();
-    }, options.openDelay);
+    }, 200);
   } else {
     open();
   }
   return {
     options: ref(options)
   };
-};
-
-/** 关闭弹框 */
-const closeDialog = (options: DialogOptions, index: number, args?: any) => {
-  dialogStore.value.splice(index, 1);
-  options.closeCallBack && options.closeCallBack({ options, index, args });
 };
 
 /**
@@ -41,17 +52,6 @@ const updateDialog = (value: any, key = "title", index = 0) => {
   dialogStore.value[index][key] = value;
 };
 
-/** 关闭所有弹框 */
-const closeAllDialog = () => {
-  dialogStore.value = [];
-};
-
-/** 千万别忘了在下面这三处引入并注册下，放心注册，不使用`addDialog`调用就不会被挂载
- * https://github.com/pure-admin/vue-pure-admin/blob/main/src/App.vue#L4
- * https://github.com/pure-admin/vue-pure-admin/blob/main/src/App.vue#L13
- * https://github.com/pure-admin/vue-pure-admin/blob/main/src/App.vue#L18
- */
-const ReDialog = withInstall(reDialog);
-
-export type { EventType, ArgsType, DialogProps, ButtonProps, DialogOptions, BtnClickDialog };
-export { ReDialog, dialogStore, addDialog, closeDialog, updateDialog, closeAllDialog };
+const ReDialog = withInstall(MyDialog);
+export type { DialogOptions, EventType };
+export { dialogStore, ReDialog, addDialog, updateDialog };

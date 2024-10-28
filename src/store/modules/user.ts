@@ -1,69 +1,71 @@
-import { App_INFO, getUserInfo, removeCookie, removeStorage, removeUserInfo, setUserInfo } from "@/utils/storage";
-import { getLogin, queryUserInfo } from "@/api/user/user";
-import { resetRouter, router } from "@/router";
+import { LoginUserInfoType, UserAuthItemType, logout, queryKKViewUrl, queryUserAuthList, queryUserInfo } from "@/api/user";
+import { closeToast, showLoadingToast } from "vant";
+import { getLoginInfo, getWeChatCode, removeCookie, removeLoginInfo, setKKViewUrl, setLoginInfo } from "@/utils/storage";
 
-import { LoginReqType } from "@/api/user/user";
-import { UserInfoType } from "@/api/user/types";
 import { defineStore } from "pinia";
-import { routerArrays } from "@/layout/types";
-import { storageSession } from "@pureadmin/utils";
+import router from "@/router";
 import { store } from "@/store";
-import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
-import { userType } from "./types";
 
+export type { LoginUserInfoType };
+
+interface AppState {
+  userInfo: LoginUserInfoType;
+  userAuthMenu: UserAuthItemType[];
+}
 export const useUserStore = defineStore({
-  id: "pure-user",
-  state: (): userType => ({
-    // 用户信息
-    userInfo: getUserInfo(),
-    // 页面级别权限
-    roles: []
-  }),
+  id: "user",
+  state: (): AppState => {
+    const userInfo = getLoginInfo();
+    return { userInfo, userAuthMenu: [] };
+  },
+  getters: {
+    getUserInfo(): LoginUserInfoType {
+      return getLoginInfo();
+    }
+  },
   actions: {
-    /** 更新用户信息 */
-    updateUserInfo(userInfo) {
-      this.userInfo = userInfo;
-    },
-    /** 存储角色 */
-    SET_ROLES(roles: Array<string>) {
-      this.roles = roles;
-    },
-    /** 登录 */
-    async login(data: LoginReqType) {
-      return new Promise<UserInfoType>((resolve, reject) => {
-        getLogin(data)
-          .then(async (res) => {
-            const data = await this.getLoginInfo();
-            resolve(data);
-          })
-          .catch((error) => reject(error));
+    /** 获取用户信息及登录权限, 储存在本地 */
+    setUserInfo(showLoading = true) {
+      if (showLoading) showLoadingToast({ message: "正在登录...", duration: 5000 });
+      return new Promise<LoginUserInfoType>(async (resolve, reject) => {
+        try {
+          const { data: viewUrl } = await queryKKViewUrl();
+          const { data: userInfo } = await queryUserInfo({});
+          const authList = await this.getUserAuthList(userInfo.id);
+          const loginInfo = { ...userInfo, userNo: userInfo.userCode, authList };
+          setKKViewUrl(viewUrl);
+          setLoginInfo(loginInfo);
+          resolve(loginInfo);
+        } catch (error) {
+          reject(error);
+        }
+        closeToast();
       });
     },
-    /** 登录 */
-    async getLoginInfo() {
-      return new Promise<UserInfoType>((resolve, reject) => {
-        queryUserInfo()
-          .then(async ({ data }) => {
-            this.updateUserInfo(data);
-            setUserInfo(data);
+    /** 获取用户权限 */
+    getUserAuthList(userId: number) {
+      showLoadingToast({ message: "菜单加载中...", duration: 5000 });
+      return new Promise<UserAuthItemType[]>((resolve, reject) => {
+        queryUserAuthList({ userId })
+          .then(({ data }) => {
+            this.userAuthMenu = data;
             resolve(data);
           })
-          .catch((error) => reject(error));
+          .catch(reject)
+          .finally(() => closeToast());
       });
     },
-
-    /** 前端登出（不调用接口） */
-    async logOut() {
-      useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
-      resetRouter();
-      router.push("/login?redirect=" + location.href.split("#")[1]);
+    /** 退出登录 */
+    logout() {
       removeCookie();
-      removeStorage(App_INFO);
-      removeUserInfo();
+      removeLoginInfo();
+      const { code = "", state = "" } = getWeChatCode();
+      router.replace({ path: "/login", query: { code, state } });
     }
   }
 });
 
-export function useUserStoreHook() {
+// Need to be used outside the setup
+export function useUserStoreWithOut() {
   return useUserStore(store);
 }

@@ -94,7 +94,7 @@ const formConfigs = ({ type }): FormConfigItemType[] => {
 };
 
 const onSubmit = (values) => {
-  if (![BillState.submit, BillState.reject].includes(props.row.billState)) {
+  if (props.type === "edit" && ![BillState.submit, BillState.reject].includes(props.row.billState)) {
     return showToast({ message: "只有待提交和重新审核的单据才能修改", position: "top" });
   }
   showConfirmDialog({ title: "确认提交?" })

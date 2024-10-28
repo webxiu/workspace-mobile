@@ -83,8 +83,126 @@ export interface DetailListItemType {
 }
 
 /**==================== 人事行政部 ==================== */
+/** 人事档案列表类型 */
+export interface HrDocItemType {
+  id: number;
+  staffId: string;
+  staffName: string;
+  staffCode: string;
+  deptId: number;
+  groupId: number;
+  position: string;
+  roleId: string;
+  sex: string;
+  education: string;
+  marital: string;
+  children: any[];
+  nation: string;
+  birthDate: string;
+  nativePlace: string;
+  height: string;
+  weight: string;
+  englishLevel: string;
+  computerLevel: string;
+  drivingLicence: string;
+  age: number;
+  idCard: string;
+  insurance: string;
+  socialSecurity: string;
+  registeredResidence: string;
+  phone: string;
+  emergencyName: string;
+  emergencyPhone: string;
+  emergencyRelation: string;
+  emergencyResidence: string;
+  startDate: string;
+  contractExpiresDate: string;
+  contractRenewalDate: string;
+  oldPosition: string;
+  newPosition: string;
+  transferDate: string;
+  remark: string;
+  accommodation: string;
+  contractSigning: string;
+  ogranizationId: string;
+  state: string;
+  level: string;
+  leaveofficeDate: string;
+  renewalCount: number;
+  province: string;
+  city: string;
+  district: string;
+  resignationReason: string;
+  temporaryFlag: string;
+  laborServiceCompany: string;
+  employeKind: string;
+  currentStayAddress: string;
+  tryDate: string;
+  tryDateMoney: string;
+  moneyStartDate: string;
+  createUserId: string;
+  createDate: string;
+  clockingInUserCode: string;
+  workRuleId: string;
+  inductionCheckInId: string;
+  noAttendance: string;
+  userInfoId: 1340462;
+  wxOpenId: string;
+  deptCode: string;
+  deptName: string;
+  groupCode: string;
+  groupName: string;
+  forenoonStart: string;
+  forenoonEnd: string;
+  afternoonStart: string;
+  afternoonEnd: string;
+  worktime: string;
+  roleName: string;
+  applyPosition: string;
+  annualleave: string;
+  validDate: string;
+  authority: string;
+  wageAccountingType: string;
+  exmpetAttendance: string;
+  faceInfoUrl: string;
+  machineId: string;
+  orgId: string;
+  deptGroupInfoList: string;
+  staffInfoWorkVOS: string;
+  staffInfoFamilyVOS: string;
+  staffInfoEducationVOS: string;
+  staffInfoPhotoVOS: string;
+  permissionFlag: string;
+  permissionDeptId: string;
+  userCode: string;
+  userName: string;
+  infoEduStartTime: string;
+  infoEduEndTime: string;
+  infoEduSchoolName: string;
+  infoEducation: string;
+  infoEduMajor: string;
+  facePic: string;
+  inDate: string;
+  idpicture: string;
+}
+
 /** 打卡记录列表类型 */
 export interface AttendanceRecordItemType {
+  id: string;
+  sn: string;
+  staffId: string;
+  deptId: string;
+  attTime: string;
+  recordTotal: string;
+  orgId: string;
+  staffCode: string;
+  staffName: string;
+  deptName: string;
+  pin: string;
+  attMachineName: string;
+}
+/** 打卡记录多列表类型 */
+export interface AttendanceRecordMulItemType {
   id: string;
   sn: string;
   staffId: string;

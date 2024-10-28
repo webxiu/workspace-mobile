@@ -1,33 +1,31 @@
+<!-- /*
+ * @Author: lixiuhai 
+ * @Date: 2023-06-23 10:00:15 
+ * @Last Modified by:   lixiuhai 
+ * @Last Modified time: 2023-06-23 10:00:15 
+ */ -->
 <template>
-  <el-config-provider :locale="currentLocale" :message="{ max: 1 }">
-    <a-config-provider :locale="antdvLocal">
-      <router-view />
-      <ReDialog />
-    </a-config-provider>
-  </el-config-provider>
+  <van-config-provider :theme="theme" class="ui-h-100 ui-p-r">
+    <router-view />
+    <ReDialog />
+  </van-config-provider>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { ElConfigProvider } from "element-plus";
-import zhCn from "element-plus/lib/locale/lang/zh-cn";
-import en from "element-plus/lib/locale/lang/en";
+import { defineComponent, ref } from "vue";
+import { ConfigProvider, ConfigProviderTheme } from "vant";
 import { ReDialog } from "@/components/ReDialog";
-import zhCN from "ant-design-vue/es/locale/zh_CN";
-import enUS from "ant-design-vue/es/locale/en_US";
+
 export default defineComponent({
-  name: "app",
+  name: "App",
   components: {
-    [ElConfigProvider.name]: ElConfigProvider,
-    ReDialog
+    [ConfigProvider.name]: ConfigProvider,
+    ReDialog: ReDialog
   },
-  computed: {
-    currentLocale() {
-      return this.$storage.locale?.locale === "zh" ? zhCn : en;
-    },
-    antdvLocal() {
-      return this.$storage.locale?.locale === "zh" ? zhCN : enUS;
-    }
+  setup() {
+    const theme = ref<ConfigProviderTheme>("light");
+
+    return { theme };
   }
 });
 </script>
