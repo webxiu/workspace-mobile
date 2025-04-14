@@ -58,13 +58,7 @@
           </div>
         </div>
         <div class="date">
-          <div
-            class="des-item"
-            v-if="
-              detailInfo.goOutRegisterVO?.realGoOutDate &&
-              /(4|5)/.test(route.query.goOutStatus as string)
-            "
-          >
+          <div class="des-item" v-if="detailInfo.goOutRegisterVO?.realGoOutDate && /(4|5)/.test(route.query.goOutStatus as string)">
             <van-row>
               <van-col class="label" span="8">实际外出时间：</van-col>
               <van-col class="value">
@@ -386,43 +380,6 @@ const onStartTimeConfirm = ({ selectedValues }) => {
 const onRealStartTimeConfirm = ({ selectedValues }) => {
   carConfigForm.realStartTime = selectedValues.join(":");
   showRealStartTime.value = false;
-};
-
-const confirmRevoke = (action: string): boolean | Promise<boolean> => {
-  return new Promise((resolve) => {
-    if (action === "cancel") {
-      resolve(true);
-      return;
-    }
-    if (revokeReason.value) {
-      showLoadingToast({
-        message: "处理中",
-        forbidClick: true,
-        duration: 5000
-      });
-      confirmButtonDisabled.value = true;
-      revokeLeaveList({ id: props.id, remark: revokeReason.value })
-        .then((res) => {
-          if (res.data) {
-            resolve(true);
-            showNotify({ type: "success", message: (res as any).message });
-            setTimeout(() => router.push("/oa/leaveApply"), 100);
-          } else {
-            resolve(false);
-            confirmButtonDisabled.value = false;
-            showNotify({
-              type: "danger",
-              message: "操作失败，请联系开发人员处理！"
-            });
-          }
-        })
-        .finally(() => {
-          closeToast();
-        });
-    }
-    resolve(false);
-    (inputRef.value as any).validate();
-  });
 };
 
 const getDetailInfo = (id) => {

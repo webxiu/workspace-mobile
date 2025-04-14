@@ -43,6 +43,20 @@ export interface UserAuthItemType {
   meta?: Partial<{ title: string; icon: string; order: number }>;
 }
 
+/** 登录页面下载信息 */
+export interface LoginAppInfoType {
+  redirect: string;
+  clientPathMac: string;
+  agentid: string;
+  appid: string;
+  orgName: string;
+  orgShortName: string;
+  clientPathWin: string;
+  clientPathWin32: string;
+  version: string;
+  logoUrl: string;
+}
+
 /**===============  ===== 信息中心 ==================== */
 
 /** 业务审批详情 */
@@ -82,6 +96,26 @@ export interface DetailListItemType {
   remark: string;
 }
 
+/** 金蝶业务审批详情(单据|明细|附件|审批节点) */
+export interface BillNoForProduceType {
+  billNo: any;
+  fbillNumber: any;
+  formId: any;
+  status: any;
+  processState: any;
+  deployKey: any;
+  processCreateUserName: any;
+  approvalResult: any;
+  processStartTime: any;
+  approverUserNames: any;
+  completedTime: any;
+  userCode: any;
+  unApprovalCount: any;
+  detailMasterResults: Array<Record<string, any>>;
+  detailChildrenResults: Array<Record<string, any>>;
+  detailChildrenColumns: Array<Record<string, any>>;
+  detailFiles: Array<{ fileName: string; id: number }>;
+}
 /**==================== 人事行政部 ==================== */
 /** 人事档案列表类型 */
 export interface HrDocItemType {
@@ -215,6 +249,9 @@ export interface AttendanceRecordMulItemType {
   deptName: string;
   pin: string;
   attMachineName: string;
+  hour?: number;
+  minute?: number;
+  second?: number;
 }
 /** 面部采集列表类型 */
 export interface FaceCollectItemType {

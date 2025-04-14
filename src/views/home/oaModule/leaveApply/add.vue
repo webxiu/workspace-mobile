@@ -15,7 +15,7 @@
         />
 
         <!-- 剩余年休假 -->
-        <van-field v-model="freeYearDays" readonly label="剩余年休假" />
+        <!-- <van-field v-model="freeYearDays" readonly label="剩余年休假" /> -->
 
         <!-- 请假类型 -->
         <van-field
@@ -44,6 +44,13 @@
           :rules="[{ required: true, message: '请假缘由不能为空' }]"
           show-word-limit
         />
+
+        <!-- 查看才有上传功能 -->
+        <van-field name="fileList" label="图片上传" v-if="!route.query.id">
+          <template #input>
+            <van-uploader v-model="fileList" multiple />
+          </template>
+        </van-field>
       </van-cell-group>
 
       <!-- 请假日期组 -->
@@ -139,7 +146,7 @@
         <!-- 请假说明 -->
         <van-field label="请假说明" is-link @click="showInstruct = true" readonly />
         <!-- 请假说明弹出层 -->
-        <van-popup v-model:show="showInstruct" position="bottom">
+        <van-popup v-model:show="showInstruct" position="bottom" :style="{ height: '75%' }">
           <div class="popup-scroll">
             <div class="close-icon">
               <van-icon name="cross" @click="showInstruct = false" />
@@ -147,35 +154,54 @@
             <div class="scroll-item">
               <van-divider content-position="left">年假</van-divider>
               <div class="des">
-                入职满一年到10年内的人员拥有5天年假，满10年以上的人员拥有10天年假，年假可拆分请假；
-                人员工作实际满一年后开始休年假，第二年按照12月31日截止休年假，不足一年按比例折扣。 例如2022年3月2日入职，2023-03-02至2023-12-31日可以休年假;
-                年假计算公式为: 从入职当天的日期到今年最后一天的时间天数 / 今年的总天数 ,然后向下取整。 条件如下: 1. 入职未满一年没有年假 2.
-                入职刚满一年的当年,从入职日期开始到当年年底相差天数/当年总天数,然后向下取整获取天数 如 2022-03-15
-                入职的,那么需要到2023-03-15才有年假,假设算2023年的年假就是 03-15 到 2022-12-31 的相差天数 / (2023年总天数) = x.68 天,那么向下取整为 x 天 3.
-                入职满一年后续的年假,从01-01开始到年底相差天数 / 当年总天数,然后向下取整 如 第二年从01-01 开始对这位员工进行计算, 即为 01-01 到 2023-12-31
-                的相差天数 / 2023年总天数 = x.79 天,那么向下取整为x天
+                <div class="mb-20">1. 入职满一年到10年内的人员拥有5天年假，满10年以上的人员拥有10天年假，年假可拆分请假；</div>
+                <div class="mb-20">2. 人员工作实际满一年后开始休年假，第二年按照12月31日截止休年假，不足一年按比例折扣。</div>
+                <div class="mb-20 explain">例如: 2022年3月2日入职，2023-03-02至2023-12-31日可以休年假。</div>
+                <div class="mb-20">3. 年假计算公式为: 从入职当天的日期到今年最后一天的时间天数 / 今年的总天数 ,然后向下取整。</div>
+                <div class="mb-20 fw-700">条件如下:</div>
+                <div style="margin-left: 10px">
+                  <div class="mb-20">1. 入职未满一年没有年假。</div>
+                  <div class="mb-20">2. 入职刚满一年的当年,从入职日期开始到当年年底相差天数/当年总天数, 然后向下取整获取天数。</div>
+                  <div class="mb-20 explain">
+                    如 2022-03-15 入职的,那么需要到2023-03-15才有年假,假设算2023年的年假就是 03-15 到 2022-12-31 的相差天数 / (2023年总天数) = x.68 天,
+                    那么向下取整为 x 天。
+                  </div>
+                  <div class="mb-20">3. 入职满一年后续的年假,从01-01开始到年底相差天数 / 当年总天数,然后向下取整。</div>
+                  <div class="mb-20 explain">
+                    如 第二年从01-01 开始对这位员工进行计算, 即为 01-01 到 2023-12-31 的相差天数 / 2023年总天数 = x.79 天,那么向下取整为x天。
+                  </div>
+                </div>
               </div>
             </div>
             <div class="scroll-item">
               <van-divider content-position="left">产假</van-divider>
               <div class="des">
-                员工休产假须提出书面休假申请、“准生证”复印件。 员工顺产产假为 178天，难产增加 30 天, 多胞胎每多育一胎增加 15 天；其中产前假均为15
-                天；男员工妻子生育的（须提供“ 准生证 ” 复印件），可享受陪产假15 天；如遇公休，节假日不顺延，未休满者按正常出勤对待，不另付薪。
-                2.1、违反计划生育政策生育的（如非婚生育、计划外生育的），不享受产假，按事假处理，此期间不支付工资福利待遇，生育费用员工自行承担
+                <div class="mb-20">
+                  1. 员工休产假须提出书面休假申请、“准生证”复印件。 员工顺产产假为 178天，难产增加 30 天, 多胞胎每多育一胎增加 15 天； 其中产前假均为15天。
+                </div>
+                <div class="mb-20">
+                  2. 男员工妻子生育的（须提供“ 准生证 ” 复印件），可享受陪产假15 天；如遇公休，节假日不顺延，未休满者按正常出勤对待，不另付薪。
+                </div>
+                <div class="mb-20">
+                  3. 违反计划生育政策生育的（如非婚生育、计划外生育的），不享受产假，按事假处理，此期间不支付工资福利待遇，生育费用员工自行承担。
+                </div>
               </div>
             </div>
             <div class="scroll-item">
               <van-divider content-position="left">婚假</van-divider>
 
               <div class="des">
-                员工休婚假须提出书面休假申请单和“结婚证”复印件、提供原件验证。 按法定结婚年龄 ( 女 20 周岁，男 22 周岁 ) 结婚的，可享受 3 天婚假；
-                婚假均含节假日，必须一次性休完不能累积，婚假期间支付员工基本工资
+                <div class="mb-20">1. 员工休婚假须提出书面休假申请单和“结婚证”复印件、提供原件验证。</div>
+                <div class="mb-20">2. 按法定结婚年龄 ( 女 20 周岁，男 22 周岁 ) 结婚的，可享受 3 天婚假。</div>
+                <div class="mb-20">3. 婚假均含节假日，必须一次性休完不能累积，婚假期间支付员工基本工资。</div>
               </div>
             </div>
             <div class="scroll-item">
               <van-divider content-position="left">丧假</van-divider>
               <div class="des">
-                直系亲属丧亡给假 3 天；直系亲属的定义为：父母、配偶、子女; 丧假为带薪假，员工申请丧假，需出示直系亲属关系证明及直系亲属死亡证明复印件
+                <div class="mb-20">直系亲属丧亡给假 3 天。</div>
+                <div class="mb-20">直系亲属的定义为：父母、配偶、子女; 丧假为带薪假。</div>
+                <div class="mb-20">员工申请丧假，需出示直系亲属关系证明及直系亲属死亡证明复印件。</div>
               </div>
             </div>
           </div>
@@ -184,7 +210,7 @@
 
       <!-- 保存按钮 -->
       <div style="margin: 30px">
-        <van-button round block type="primary" native-type="submit" :loading="loading"> 保存 </van-button>
+        <van-button round block type="primary" native-type="submit" :loading="loading">保存</van-button>
       </div>
     </van-form>
   </div>
@@ -223,6 +249,8 @@ defineOptions({
 const userName = ref(""); // 请假人
 const holidayType = ref(""); // 请假类型
 const remark = ref(""); // 请假缘由
+const fileList = ref([]); // [{url: "https://fastly.jsdelivr.net/npm/@vant/assets/leaf.jpeg"}]
+const fileUrls = ref<string[]>([]);
 const startDate = ref(dayjs().format("YYYY-MM-DD")); // 开始日期
 const startTime = ref(""); // 开始时间
 const endDate = ref(dayjs().format("YYYY-MM-DD")); // 结束日期
@@ -240,6 +268,7 @@ const showEndDate = ref(false);
 const showEndTime = ref(false);
 const showTypePicker = ref(false);
 const showInstruct = ref(false);
+const curUserId = ref<number>();
 
 const startTimeArr = computed(() => {
   return startTime.value?.split(":");
@@ -339,8 +368,13 @@ const filterTime = (type: string, options: PickerOption[]) => {
 
 const filterEndTime = (type: string, options: PickerOption[]) => {
   if (type === "hour") {
-    const endTimeHour = startTime.value.split(":")[0];
-    return options.filter((option) => Number(option.value) >= +endTimeHour);
+
+    // 如果开始日期和结束日期不一致，则无需进行选项过滤
+    if (startDate.value === endDate.value) {
+      const endTimeHour = startTime.value.split(":")[0];
+      return options.filter((option) => Number(option.value) >= +endTimeHour);
+    }
+    return options;
   }
 
   if (type === "minute") {
@@ -369,12 +403,12 @@ const onSubmit = (values) => {
     return;
   }
   //校验时长是否为30分钟的整数倍
-  if (values.hours) {
-    if (values.hours % 0.5 !== 0 || values.hours == 0) {
-      showToast({ message: "请假时长必须为30分钟的整数倍", duration: 3000 });
-      return;
-    }
-  }
+  // if (values.hours) {
+  //   if (values.hours % 0.5 !== 0 || values.hours == 0) {
+  //     showToast({ message: "请假时长必须为30分钟的整数倍", duration: 3000 });
+  //     return;
+  //   }
+  // }
 
   loading.value = true;
 
@@ -385,9 +419,10 @@ const onSubmit = (values) => {
       id: route.query.id,
       days: +values.days,
       hours: +values.hours,
-      userId: userStore.userInfo.userCode || userId.value,
+      userId: curUserId.value,
       itemSequence: 1,
-      createUserId: userStore.userInfo.userCode || userId.value,
+      fileList: undefined,
+      createUserId: curUserId.value,
       operationType: 1
     };
     editLeaveList(editConfig)
@@ -431,15 +466,22 @@ const onSubmit = (values) => {
     });
   };
 
-  addLeaveList({
+  const fd = new FormData();
+  values.fileList?.map((item) => item.file).forEach((el) => fd.append("files", el));
+  const reqParams = {
     ...values,
     days: +values.days,
     hours: +values.hours,
     userId: userStore.userInfo.userCode || userId.value,
     itemSequence: 1,
+    fileList: null,
     createUserId: userStore.userInfo.userCode || userId.value,
     operationType: 1
-  })
+  };
+
+  fd.append("param", JSON.stringify(reqParams));
+
+  addLeaveList(fd)
     .then((res) => {
       if (res.status === 200 && res.data) {
         addResId.value = res.data;
@@ -516,11 +558,12 @@ const setCalcTimes = () => {
 // 编辑页面获取数据
 const getEditInfo = () => {
   showLoadingToast("查询中");
-  getLeaveDetail({ id: route.query.id })
+  getLeaveDetail({ billNo: route.query.billNo })
     .then((res) => {
       if (res.data) {
         // 初始化表单的值
         userName.value = res.data.userName;
+        curUserId.value = res.data.userId;
         holidayType.value = res.data.holidayType;
         remark.value = res.data.remark;
         startDate.value = res.data.startDate;
@@ -529,6 +572,8 @@ const getEditInfo = () => {
         endTime.value = res.data.endTime;
         days.value = res.data.days;
         hours.value = res.data.hours;
+
+        // 将fileUrls进行遍历，加上域名信息进行复制给预览列表，如fileList.value = [{url: fileUrls xxx}]
       }
     })
     .finally(() => closeToast());
@@ -550,26 +595,32 @@ watch(
   padding-bottom: 32px;
 
   .popup-scroll {
-    height: 50vh;
-
-    .scroll-item {
-      padding: 0 30px 15px;
-      text-align: justify;
-    }
-
+    position: relative;
+    padding: 30px 30px;
     .close-icon {
+      position: absolute;
+      top: 5px;
+      right: 5px;
       text-align: right;
       font-size: 40px;
       margin: 18px 24px 0 0;
+    }
+
+    .scroll-item {
+      text-align: justify;
     }
 
     .line-text {
       font-size: 34px;
     }
     .des {
-      color: #969799;
+      color: #757575;
       font-size: 26px;
       z-index: 3000;
+    }
+
+    .explain {
+      color: #969799;
     }
 
     :deep(.van-divider) {

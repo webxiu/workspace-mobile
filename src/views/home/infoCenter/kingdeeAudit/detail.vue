@@ -18,27 +18,9 @@
         </van-row>
       </van-cell-group>
     </van-form>
-    <div class="pt-24 pb-24">
-      <div class="fw-700 mt-20 mb-20 fz-32 color-111">明细</div>
-      <div class="kd-table ui-ovy-a">
-        <table v-if="tableColumns.length > 0">
-          <thead>
-            <tr>
-              <td class="row-td" v-for="item in tableColumns">
-                {{ item.label }}
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in tableData" :key="index">
-              <td class="row-td" v-for="(cell, idx) in item" :key="idx">
-                <van-text-ellipsis class="table-cell-cont" :content="`${cell.value}`" expand-text="展开" collapse-text="收起" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div v-else class="ui-ta-c p-30" style="border: 1px solid #eee">暂无数据</div>
-      </div>
+    <div class="pb-24">
+      <div class="fw-700 mt-20 mb-20 fz-32 color-111">明细{{ dataList?.length ? `(${dataList.length})` : "" }}</div>
+      <HxTable :columns="columns" :loading="false" :dataList="dataList" :height="100" :maxHeight="260" />
     </div>
     <div class="pb-24">
       <div class="fw-700 mt-20 mb-20 fz-32 color-111">附件列表</div>
@@ -67,7 +49,7 @@
           </div>
         </div>
       </div>
-      <div v-else class="fz-28">暂无附件信息</div>
+      <div v-else class="fz-28 ui-ta-c">暂无附件信息</div>
     </div>
     <div class="flex-col mt-30 pb-60">
       <FlowAudit :item="item" v-for="(item, i) in auditNodeList" :key="i" />
@@ -93,7 +75,7 @@
                 @click.stop="showPicker = true"
               />
               <van-popup v-model:show="showPicker" position="bottom" @click.stop>
-                <van-picker title="快捷选择" :columns="columns" @confirm="onConfirm" @cancel="showPicker = false" />
+                <van-picker title="快捷选择" :columns="dataOption" @confirm="onConfirm" @cancel="showPicker = false" />
               </van-popup>
               <van-field
                 v-if="showLayer"
@@ -116,12 +98,12 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import { useRoute, useRouter } from "vue-router";
-import { reactive, ref, PropType, onMounted, computed } from "vue";
+import { reactive, ref, onMounted, computed, h } from "vue";
 import { useAppStore } from "@/store/modules/app";
 import { showToastModel } from "@/utils/getStatusColor";
-import { showConfirmDialog, showSuccessToast, showLoadingToast, closeToast } from "vant";
+import { showConfirmDialog, showSuccessToast, showLoadingToast, closeToast, TextEllipsis } from "vant";
 import FlowAudit, { AuditNodeItemType } from "./components/FlowAudit.vue";
 import { getRouteLink } from "@/config/common";
 import { Base64 } from "js-base64";
@@ -131,66 +113,33 @@ import {
   approvalInstanceDetails,
   fastSelectApprovalAdviceList,
   auditPass,
-  fetchAttrViewUrl
+  fetchAttrViewUrl,
+  BillNoForProduceType
 } from "@/api/infoCenter";
 import { getKKViewUrl } from "@/utils/storage";
-
-interface BillNoForProduceType {
-  billNo: any;
-  fbillNumber: any;
-  formId: any;
-  status: any;
-  processState: any;
-  deployKey: any;
-  processCreateUserName: any;
-  approvalResult: any;
-  processStartTime: any;
-  approverUserNames: any;
-  completedTime: any;
-  userCode: any;
-  unApprovalCount: any;
-  detailMasterResults: Array<Record<string, any>>;
-  detailChildrenResults: Array<Record<string, any>>;
-  detailChildrenColumns: Array<Record<string, any>>;
-  detailFiles: Array<{ fileName: string; id: number }>;
-}
-
-defineProps({
-  dataList: { type: Array as PropType<any[]>, default: () => [] }
-});
-const appStore = useAppStore();
-const route = useRoute();
-const router = useRouter();
-
-const attrFileList = ref<Array<{ fileName: string; id: number }>>([]);
+import HxTable, { TableColumnType } from "@/components/HxTable/index.vue";
 
 /**
  * auditStatus(隐藏底部菜单): 0:我的待办 1:我的已办 2:我的发起
  */
+const appStore = useAppStore();
+const route = useRoute();
+const router = useRouter();
 const { billNo, billType, fbillNumber, deployKey } = route.query;
+const attrFileList = ref<Array<{ fileName: string; id: number }>>([]);
 const auditStatus = (route.query?.auditStatus as string) || "0";
-
 const auditNodeList = ref<AuditNodeItemType[]>([]);
 const showLayer = ref<boolean>(false);
 const showPicker = ref<boolean>(false);
 const loading = ref<boolean>(false);
 const auditType = ref<string>("");
 const auditForm = reactive({ approvalType: "", disposition: "" });
-// 订单采购详情
-const customerOrderList = ref<Array<{ label: string; value: any }>>([]);
-// 明细表格配置列
-const tableColumns = ref<Array<any>>([]);
-// 明细表格数据
-const tableData = ref<Array<any>>([]);
-
-// 快捷选择(当前选中)
-const columns = ref<Array<any>>([]);
+const dataOption = ref<Array<any>>([]); // 快捷选择(当前选中)
+const customerOrderList = ref<Array<{ label: string; value: any }>>([]); // 订单采购详情
+const columns = ref<TableColumnType[]>([]); // 明细表格配置列
+const dataList = ref<Array<any>>([]); // 明细表格数据
 // 快捷选择(所有选项)
-const auditOptions = reactive({
-  agreeOptions: [],
-  rejectOptions: [],
-  stopOptions: []
-});
+const auditOptions = reactive({ agreeOptions: [], rejectOptions: [], stopOptions: [] });
 
 const onViewItem = (item) => {
   showLoadingToast({ message: "请稍后" });
@@ -200,17 +149,12 @@ const onViewItem = (item) => {
         closeToast();
         const resPathAndName = res.data;
         const kkViewUrl = getKKViewUrl();
-
         const vPath = `${kkViewUrl}api${resPathAndName}`;
-
-        const url2 = kkViewUrl + "preview/onlinePreview?url=" + encodeURIComponent(Base64.encode(vPath));
-
-        // window.open(url2);
-        window.location.href = url2;
+        const url = kkViewUrl + "preview/onlinePreview?url=" + encodeURIComponent(Base64.encode(vPath));
+        window.location.href = url; // window.open(url);
       }
     })
     .catch(() => closeToast());
-  // .finally(() => closeToast());
 };
 
 onMounted(() => {
@@ -234,33 +178,27 @@ const getData = () => {
       const sortMasterResults = data.detailMasterResults.sort((a, b) => a.FSEQ - b.FSEQ);
       sortMasterResults.forEach((item) => {
         const label = Object.keys(item).filter((f) => f !== "FSEQ");
-        customerOrderList.value.push({
-          label: label[0],
-          value: item[label[0]]
-        });
-      });
-      // 表格列名称
-      const sortColumns = data.detailChildrenColumns.sort((a, b) => a.FSEQ - b.FSEQ);
-      sortColumns.forEach((item) => {
-        const label = Object.keys(item).filter((f) => f !== "FSEQ");
-        if (label[0]) {
-          tableColumns.value.push({ label: label[0] });
-        }
+        customerOrderList.value.push({ label: label[0], value: item[label[0]] });
       });
 
-      // 附件信息列表数据
-      attrFileList.value = data.detailFiles || [];
-
-      // 表格行数据(依据sortColumns的列顺序排序)
-      tableData.value = data.detailChildrenResults.map((item) => {
-        const arr: any = [];
-        tableColumns.value.forEach((cell) => {
-          Object.keys(item).forEach((key) => {
-            if (cell.label === key) arr.push({ label: key, value: item[key] });
-          });
+      // 配置明细列表
+      const _columns = data.detailChildrenColumns
+        .sort((a, b) => a.FSEQ - b.FSEQ)
+        .map((item) => {
+          const { TITLE, FLISTVIEWCOLWIDTHPER } = item;
+          const render: TableColumnType["render"] = ({ row, column }) =>
+            h(TextEllipsis, { content: row[column.prop], rows: 2, expandText: "展开", collapseText: "收起" });
+          return {
+            label: TITLE,
+            prop: TITLE,
+            index: TITLE === "序号",
+            width: FLISTVIEWCOLWIDTHPER < 30 ? 100 : FLISTVIEWCOLWIDTHPER,
+            render: render
+          } as TableColumnType;
         });
-        return arr;
-      });
+      columns.value = _columns; // 明细表头
+      dataList.value = data.detailChildrenResults; // 明细数据
+      attrFileList.value = data.detailFiles || []; // 附件列表
       closeToast();
     })
     .catch((err) => {
@@ -311,11 +249,11 @@ const getRuningAudit = () => {
 
 const onClickAudit = (type: string) => {
   if (type === "1") {
-    columns.value = auditOptions.agreeOptions;
+    dataOption.value = auditOptions.agreeOptions;
   } else if (type === "2") {
-    columns.value = auditOptions.rejectOptions;
+    dataOption.value = auditOptions.rejectOptions;
   } else if (type === "3") {
-    columns.value = auditOptions.stopOptions;
+    dataOption.value = auditOptions.stopOptions;
   }
   showLayer.value = true;
   auditType.value = type;

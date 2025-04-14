@@ -307,12 +307,12 @@ const onSubmit = (values) => {
     return;
   }
   //校验时长是否为30分钟的整数倍
-  if (values.hours) {
-    if (values.hours % 0.5 !== 0 || values.hours == 0) {
-      showToast({ message: "加班时长必须为30分钟的整数倍", duration: 3000 });
-      return;
-    }
-  }
+  // if (values.hours) {
+  //   if (values.hours % 0.5 !== 0 || values.hours == 0) {
+  //     showToast({ message: "加班时长必须为30分钟的整数倍", duration: 3000 });
+  //     return;
+  //   }
+  // }
 
   loading.value = true;
 

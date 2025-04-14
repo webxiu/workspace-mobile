@@ -153,6 +153,7 @@ import { colorSelector } from "@/utils/getStatusColor";
 import { useAppStore } from "@/store/modules/app";
 import NodeDetailModal from "@/components/NodeDetailModal/index.vue";
 import { commonSubmit } from "@/api/common";
+import { commonRevokeList } from "@/api/outApply";
 
 interface DetailInfoType {
   overtimeType: string;
@@ -218,34 +219,31 @@ const confirmRevoke = (action: string): boolean | Promise<boolean> => {
       resolve(true);
       return;
     }
-    if (revokeReason.value) {
-      showLoadingToast({
-        message: "处理中",
-        forbidClick: true,
-        duration: 5000
-      });
-      confirmButtonDisabled.value = true;
-      revokeOverTimeList({ id: props.id, remark: revokeReason.value })
-        .then((res) => {
-          if (res.data) {
-            resolve(true);
-            showNotify({ type: "success", message: (res as any).message });
-            setTimeout(() => router.push("/oa/overTime"), 100);
-          } else {
-            resolve(false);
-            confirmButtonDisabled.value = false;
-            showNotify({
-              type: "danger",
-              message: "操作失败，请联系开发人员处理！"
-            });
-          }
-        })
-        .finally(() => {
-          closeToast();
+    showLoadingToast({
+      message: "处理中",
+      forbidClick: true,
+      duration: 5000
+    });
+    commonRevokeList({ billNo: detailInfo.value.billNo })
+      .then((res) => {
+        if (res.data) {
+          resolve(true);
+          showNotify({ type: "success", message: (res as any).message });
+          setTimeout(() => router.push("/oa/overTime"), 100);
+        } else {
+          resolve(true);
+        }
+      })
+      .catch((err) => {
+        showNotify({
+          type: "danger",
+          message: err.message
         });
-    }
-    resolve(false);
-    (inputRef.value as any).validate();
+        resolve(true);
+      })
+      .finally(() => {
+        closeToast();
+      });
   });
 };
 
@@ -257,7 +255,11 @@ const getDetailInfo = (id) => {
 
 const handleAction = (actionType) => {
   if (actionType === "revoke") {
-    showRevoke.value = true;
+    showConfirmDialog({
+      title: "温馨提示",
+      message: "确认执行撤销操作吗？",
+      beforeClose: confirmRevoke
+    }).catch(() => {});
     return;
   }
   showConfirmDialog({

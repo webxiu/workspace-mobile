@@ -5,11 +5,11 @@
  * @Last Modified time: 2024-10-25 11:14:18
  */
 
-import { LoginUserInfoType, UserAuthItemType } from "./types";
+import { LoginAppInfoType, LoginUserInfoType, UserAuthItemType } from "./types";
 
 import http from "@/utils/request";
 
-export type { UserAuthItemType, LoginUserInfoType };
+export type { UserAuthItemType, LoginUserInfoType, LoginAppInfoType };
 
 export type LoginType = { userNo: string; password: string; orgDomain?: string };
 
@@ -27,13 +27,17 @@ export function logout() {
 export function queryUserInfo(params) {
   return http.request<LoginUserInfoType>({ url: "/getowneruserinfo", method: "GET", params });
 }
+/** 查询登录页面版本等信息 */
+export function queryLoginParamsInfo(params) {
+  return http.request<LoginAppInfoType>({ url: "/getloginpagemessage", method: "GET", params });
+}
 
 /** 查询人事档案信息 */
 export function queryStaffUserInfo(params) {
   return http.request({ url: "/oa/hr/staffinfo/select", method: "POST", data: params });
 }
 
-/** 使用Code自动登录(接口未出) */
+/** 使用Code自动登录 */
 export function autoLogin(params) {
   return http.request({ url: "/app/qywx/api/mobileAppLogin", method: "GET", params });
 }
@@ -45,7 +49,7 @@ export function queryUserAuthList(params) {
 
 /** 查询kkView预览地址 */
 export function queryKKViewUrl() {
-  return http.request<string>({ url: "/sys/system/getPrevewDomain", method: "GET", params: {} });
+  return http.request<string>({ url: "/sys/system/getPreviewDomain", method: "GET", params: {} });
 }
 
 /** 获取部门树 */

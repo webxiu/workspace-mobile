@@ -28,7 +28,7 @@
       @setBottomCurrent="setBottomCurrent"
       class="detail-page flex-1 ui-ovy-a"
     />
-    <van-tabbar v-model="activeSelected" :border="false" :fixed="false" v-if="calcTabbar">
+    <van-tabbar v-model="activeSelected" :border="false" :fixed="false">
       <!-- 第一项为占位项 -->
       <!-- <van-tabbar-item style="display: none" /> -->
       <van-tabbar-item icon="label-o" v-show="calcSign">工资详情</van-tabbar-item>
@@ -55,6 +55,7 @@ export interface DetailInfoType {
   remark: string;
   createUserName: string;
   createDate: string;
+  signatureFilePath?: string;
   startDate: string;
   startTime: string;
   endDate: string;
@@ -65,7 +66,7 @@ export interface DetailInfoType {
   billNo: string;
   billState: number;
   statusValue: string;
-  Id?: number;
+  id?: string | number;
 }
 
 const tabsPage = [
@@ -79,7 +80,7 @@ const route = useRoute();
 const appStore = useAppStore();
 const userStore = useUserStore();
 
-const detailInfo = ref<DetailInfoType>({
+const detailInfo = ref<any>({
   userName: "",
   billNo: "",
   holidayType: "",
@@ -100,24 +101,15 @@ const wxOpenIds = ref("");
 const userName = ref("");
 const templatesList = ref([]);
 
-const calcTabbar = computed(() => {
-  if (detailInfo.value.statusValue) {
-    return !(
-      // detailInfo.value.statusValue === "5" ||
-      (detailInfo.value.statusValue === "6")
-    );
-  }
-});
-
 const calcSign = computed(() => {
   if (detailInfo.value.statusValue) {
-    return detailInfo.value.statusValue === "3" || detailInfo.value.statusValue === "4" || detailInfo.value.statusValue === "5";
+    return [3, 4, 5, 6].includes(detailInfo.value.statusValue);
   }
 });
 
 const calcFeedBack = computed(() => {
   if (detailInfo.value.statusValue) {
-    return detailInfo.value.statusValue === "3" || detailInfo.value.statusValue === "4";
+    return [3, 4].includes(detailInfo.value.statusValue);
   }
 });
 
@@ -127,14 +119,15 @@ const getDetailInfo = async () => {
   let templates = await fetchGzTemplate();
   templatesList.value = templates;
   if (templates.length) {
-    const { gzmbb, payslipId, gzmbNo, needGetId, yearMonth } = route.query;
-    const reqData: any = { gzmbb, gzmbNo };
-    if (payslipId != "-1") reqData.payslipId = payslipId;
-    if (needGetId && needGetId === "true") reqData.needGetId = needGetId;
+    const { gzmbb, payslipId, gzmbNo, needGetId, yearMonth, salt } = route.query;
+    const reqData: any = { gzmbNo };
+    // if (payslipId != "-1") reqData.payslipId = payslipId;
+    // if (needGetId && needGetId === "true") reqData.needGetId = needGetId;
     if (yearMonth) reqData.yearMonth = yearMonth;
+    if (salt) reqData.salt = salt;
     getPayRollDetail(reqData).then((res: any) => {
-      if (res.data && res.data.length) {
-        detailInfo.value = res.data[0];
+      if (res.data) {
+        detailInfo.value = res.data;
       }
     });
   }
@@ -143,9 +136,9 @@ const getDetailInfo = async () => {
 const fetchGzTemplate = async () => {
   let templateArr;
   await getTemplatePayRoll({
-    isApp: true,
+    // isApp: true,
     templateNo: route.query.gzmbNo,
-    templateType: "appshow"
+    templateType: "appShow"
   }).then((res) => {
     if (res.data && res.data.length) {
       templateArr = res.data;

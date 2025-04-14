@@ -94,13 +94,13 @@ html {
   display: inline-block;
   text-align-last: justify;
   font-weight: 700;
+  position: relative;
+  padding-right: 10px;
+  font-size: 24px;
   &::after {
-    width: 100%;
     content: ":";
-    position: relative;
-    bottom: -2px;
-    margin: 0 12px 0 2px;
-    font-size: 36px;
+    bottom: 0px;
+    position: absolute;
   }
 }
 

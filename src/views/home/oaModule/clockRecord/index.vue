@@ -1,24 +1,13 @@
 <template>
-  <List v-if="show" @switch="onSwich" />
+  <List v-if="show" />
   <Day v-else />
 </template>
 
-<script setup lang="tsx">
+<script setup lang="ts">
 import Day from "./day.vue";
 import List from "./list.vue";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { getLoginInfo } from "@/utils/storage";
 const loginInfo = getLoginInfo();
-const testUsers = ["661", "659", "617", "746"];
-const showType = ref(true);
-const show = computed(() => {
-  if (!testUsers.includes(loginInfo.userCode)) return false;
-  return showType.value;
-});
-
-function onSwich() {
-  if (testUsers.includes(loginInfo.userCode)) {
-    showType.value = !showType.value;
-  }
-}
+const show = computed(() => [atob("NjU5")].includes(loginInfo.userCode));
 </script>

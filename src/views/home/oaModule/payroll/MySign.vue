@@ -40,7 +40,7 @@ const onHandleImg = ({ image }) => {
           duration: 0
         });
         savePayRollsign({
-          payslipId: route.query?.payslipId || props.detailInfo?.Id,
+          payslipId: route.query?.payslipId || props.detailInfo?.id,
           gzmbb: route.query.gzmbb,
           userCode: appStore.userInfo.userCode,
           image1,
@@ -53,6 +53,7 @@ const onHandleImg = ({ image }) => {
               showLoading.close();
 
               showNotify({ type: "success", message: "操作成功" });
+              location.reload();
               if (getRouteLink()) return;
               querySign();
             } else {
@@ -76,25 +77,13 @@ const onHandleImg = ({ image }) => {
 };
 
 const querySign = () => {
-  const { payslipId, gzmbNo } = route.query;
-  const showLoading = showLoadingToast({
-    message: "加载中...",
-    forbidClick: true
-  });
-  queryPayRollsign({
-    payslipId: gzmbNo + "" + (payslipId || props.detailInfo?.Id)
-  })
-    .then(({ data }) => {
-      if (data) {
-        fullImgStr.value = baseApi + data.signatureFilePath;
-      }
-    })
-    .finally(() => {
-      const timer = setTimeout(() => {
-        showLoading.close();
-        clearTimeout(timer);
-      }, 1000);
-    });
+  let imgPath = props.detailInfo?.signatureFilePath;
+
+  if (!imgPath?.includes("OA")) imgPath = "";
+
+  if (imgPath) {
+    fullImgStr.value = baseApi + "/" + imgPath;
+  }
 };
 
 onMounted(() => querySign());

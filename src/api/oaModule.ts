@@ -54,6 +54,34 @@ export const getSendLeaveList = (params = {}, config?: AxiosRequestConfig) => {
   });
 };
 
+/** 请假单: 上传附件 */
+export function uploadAttrLeaveApply(data, config?: AxiosRequestConfig) {
+  return http.request({
+    url: "/oa/hr/askforleave/addFile",
+    method: "POST",
+    data,
+    ...config
+  });
+}
+
+/** 请假单: 删除附件 */
+export function deleteAttrLeaveApply(data) {
+  return http.request({
+    url: "/oa/hr/askforleave/delFile",
+    method: "POST",
+    data
+  });
+}
+
+/** 请假单: 查询附件 */
+export function fetchAttrLeaveApply(params) {
+  return http.request({
+    url: "/oa/hr/askforleave/getFile",
+    method: "GET",
+    params
+  });
+}
+
 /** 通用枚举查询接口 */
 export const fetchEnumList = (params) => {
   return http.request({
@@ -103,12 +131,12 @@ export const getOverTimeDetail = (params, config?: AxiosRequestConfig) => {
 };
 
 /** 新增请假单 */
-export const addLeaveList = (params, config?: AxiosRequestConfig) => {
+export const addLeaveList = (params) => {
   return http.request({
     url: "/app/qywx/workspace/askforleave/insert",
     method: "POST",
     data: params,
-    ...config
+    headers: { "Content-Type": "multipart/form-data" }
   });
 };
 
@@ -255,7 +283,7 @@ export const calcOverTimes = (params, config?: AxiosRequestConfig) => {
 /** 获取工资已发放年份 */
 export const getPayYears = (data, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/getmepayslipyear",
+    url: "/app/qywx/workspace/payslipall/getmepayslipyear",
     method: "POST",
     data,
     ...config
@@ -265,7 +293,7 @@ export const getPayYears = (data, config?: AxiosRequestConfig) => {
 /** 获取工资条数据列表 */
 export const getPayRollList = (params, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/getmepaysliplistdata",
+    url: "/app/qywx/workspace/payslipall/getmepaysliplistdata",
     method: "POST",
     params,
     ...config
@@ -275,7 +303,7 @@ export const getPayRollList = (params, config?: AxiosRequestConfig) => {
 /** 获取工资条数据详情 */
 export const getPayRollDetail = (params, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/getpayslipdata",
+    url: "/app/qywx/workspace/payslipall/getpayslipdata",
     method: "POST",
     data: params,
     ...config
@@ -285,7 +313,7 @@ export const getPayRollDetail = (params, config?: AxiosRequestConfig) => {
 /** 获取工资条模版数据 */
 export const getTemplatePayRoll = (params, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/getpaysliptemplatedata",
+    url: "/app/qywx/workspace/payslipall/getpaysliptemplatedata",
     method: "POST",
     data: params,
     ...config
@@ -295,7 +323,7 @@ export const getTemplatePayRoll = (params, config?: AxiosRequestConfig) => {
 /** 提交工资单反馈 */
 export const submitPayRollFeed = (params, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/savepayslipexception",
+    url: "/app/qywx/workspace/payslipall/savepayslipexception",
     method: "POST",
     data: params,
     ...config
@@ -305,7 +333,7 @@ export const submitPayRollFeed = (params, config?: AxiosRequestConfig) => {
 /** 保存工资单签名信息 */
 export const savePayRollsign = (params, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/savepayslipsignature",
+    url: "/app/qywx/workspace/payslipall/savepayslipsignature",
     method: "POST",
     data: params,
     ...config
@@ -315,7 +343,7 @@ export const savePayRollsign = (params, config?: AxiosRequestConfig) => {
 /** 查询工资单签名信息 */
 export const queryPayRollsign = (params, config?: AxiosRequestConfig) => {
   return http.request({
-    url: "/app/qywx/workspace/payslip/getsignaturebyid",
+    url: "/app/qywx/workspace/payslipall/getsignaturebyid",
     method: "POST",
     data: params,
     ...config

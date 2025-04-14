@@ -31,6 +31,15 @@ export const revokeGoOutList = (data) => {
   });
 };
 
+/** 通用撤销 */
+export const commonRevokeList = (data) => {
+  return http.request({
+    url: "/app/common/approval/revoke",
+    method: "POST",
+    data,
+  });
+};
+
 /** 删除 */
 export const deleteGoOutList = (data) => {
   return http.request({

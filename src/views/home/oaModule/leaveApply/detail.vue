@@ -32,6 +32,15 @@
             </div>
           </div>
           <div class="des-item">
+            <div :style="{ display: !fileUrls?.length ? 'flex' : 'block', 'align-items': !fileUrls?.length ? 'center' : 'normal' }">
+              <div class="label" style="margin-bottom: 8px">附件图片</div>
+              <div class="value">
+                <van-uploader v-model="fileUrls" multiple @delete="deleteImgs" :after-read="afterRead" />
+                <!-- <span v-else>无</span> -->
+              </div>
+            </div>
+          </div>
+          <div class="des-item">
             <div style="display: flex; align-items: center">
               <div class="label">创建人</div>
               <div class="value">{{ detailInfo.createUserName }}</div>
@@ -147,12 +156,13 @@
 <script setup lang="tsx">
 import { onMounted, ref, computed, watch, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { closeToast, showConfirmDialog, showLoadingToast, showNotify } from "vant";
-import { deleteLeaveList, getLeaveDetail, revokeLeaveList } from "@/api/oaModule";
+import { closeToast, showConfirmDialog, showLoadingToast, showNotify, showToast } from "vant";
+import { deleteAttrLeaveApply, deleteLeaveList, fetchAttrLeaveApply, getLeaveDetail, revokeLeaveList, uploadAttrLeaveApply } from "@/api/oaModule";
 import { colorSelector } from "@/utils/getStatusColor";
 import { useAppStore } from "@/store/modules/app";
 import NodeDetailModal from "@/components/NodeDetailModal/index.vue";
 import { commonSubmit } from "@/api/common";
+import { commonRevokeList } from "@/api/outApply";
 
 interface DetailInfoType {
   holidayType: string;
@@ -167,6 +177,8 @@ interface DetailInfoType {
   hours: string;
   userName: string;
   billNo: string;
+  billId: string;
+  fileUrls: { url: string }[];
   billState: number;
   approver: string[];
   operationType: number;
@@ -184,11 +196,14 @@ const appStore = useAppStore();
 const inputRef = ref(null);
 const showApprovalNodePanel = ref(false);
 const nodeRef = ref();
+const baseApi = import.meta.env.VITE_BASE_API;
 
 const confirmButtonDisabled = ref(false);
+const fileUrls = ref([]);
 const detailInfo = ref<DetailInfoType>({
   userName: "",
   billNo: "",
+  billId: "",
   holidayType: "",
   remark: "",
   createUserName: "",
@@ -199,6 +214,7 @@ const detailInfo = ref<DetailInfoType>({
   endTime: "",
   days: "",
   hours: "",
+  fileUrls: [],
   billState: 0,
   approver: [],
   operationType: 0,
@@ -218,46 +234,103 @@ const confirmRevoke = (action: string): boolean | Promise<boolean> => {
       resolve(true);
       return;
     }
-    if (revokeReason.value) {
-      showLoadingToast({
-        message: "处理中",
-        forbidClick: true,
-        duration: 5000
-      });
-      confirmButtonDisabled.value = true;
-      revokeLeaveList({ id: props.id, remark: revokeReason.value })
-        .then((res) => {
-          if (res.data) {
-            resolve(true);
-            showNotify({ type: "success", message: (res as any).message });
-            setTimeout(() => router.push("/oa/leaveApply"), 100);
-          } else {
-            resolve(false);
-            confirmButtonDisabled.value = false;
-            showNotify({
-              type: "danger",
-              message: "操作失败，请联系开发人员处理！"
-            });
-          }
-        })
-        .finally(() => {
-          closeToast();
+    showLoadingToast({
+      message: "处理中",
+      forbidClick: true,
+      duration: 5000
+    });
+    commonRevokeList({ billNo: detailInfo.value.billNo })
+      .then((res) => {
+        if (res.data) {
+          resolve(true);
+          showNotify({ type: "success", message: (res as any).message });
+          setTimeout(() => router.push("/oa/leaveApply"), 100);
+        } else {
+          resolve(true);
+        }
+      })
+      .catch((err) => {
+        showNotify({
+          type: "danger",
+          message: err.message
         });
-    }
-    resolve(false);
-    (inputRef.value as any).validate();
+        resolve(true);
+      })
+      .finally(() => {
+        closeToast();
+      });
   });
 };
 
-const getDetailInfo = (id) => {
-  getLeaveDetail({ id }).then((res) => {
+const afterRead = (file) => {
+  console.log(Array.isArray(file));
+  let fileParam;
+
+  if (Array.isArray(file)) {
+    fileParam = file;
+  } else {
+    fileParam = [file];
+  }
+
+  const fd = new FormData();
+  fileParam.map((item) => item.file).forEach((el) => fd.append("files", el));
+
+  fd.append("id", route.params.id as string);
+
+  uploadAttrLeaveApply(fd).then((res) => {
+    if (res.data) {
+      showToast("上传成功");
+      getFilesInfo();
+    }
+  });
+};
+
+const deleteImgs = (val) => {
+  showConfirmDialog({
+    title: "温馨提示",
+    message: "是否确认删除此图片"
+  })
+    .then(() => {
+      showLoadingToast("正在删除");
+      deleteAttrLeaveApply({ file: val.imgOriginUrl, id: route.params.id }).then((res) => {
+        if (res.data) {
+          showToast({ message: "删除成功", type: "success" });
+          getFilesInfo();
+        }
+      });
+    })
+    .catch(() => {
+      getFilesInfo();
+    })
+    .finally(() => closeToast());
+};
+
+const getFilesInfo = () => {
+  fetchAttrLeaveApply({ id: route.params.id }).then((res) => {
+    if (res.data) {
+      const imgTableData = res.data?.fileUrls?.map((item: string) => {
+        const imgUrl = baseApi + item;
+        const imgName = item.split("/").at(-1);
+        return { imgUrl, imgName, imgOriginUrl: item };
+      });
+      fileUrls.value = imgTableData.map((item) => ({ url: item.imgUrl, imgOriginUrl: item.imgOriginUrl }));
+    }
+  });
+};
+
+const getDetailInfo = (billNo) => {
+  getLeaveDetail({ billNo }).then((res) => {
     detailInfo.value = res.data;
   });
 };
 
 const handleAction = (actionType) => {
   if (actionType === "revoke") {
-    showRevoke.value = true;
+    showConfirmDialog({
+      title: "温馨提示",
+      message: "确认执行撤销操作吗？",
+      beforeClose: confirmRevoke
+    }).catch(() => {});
     return;
   }
   showConfirmDialog({
@@ -268,7 +341,7 @@ const handleAction = (actionType) => {
         if (action === "confirm") {
           let actionRes;
           if (actionType === "del") {
-            actionRes = deleteLeaveList({ id: props.id });
+            actionRes = deleteLeaveList({ id: detailInfo.value?.billId });
           } else if (actionType === "submit") {
             actionRes = commonSubmit({
               billNo: detailInfo.value.billNo,
@@ -308,7 +381,7 @@ const changeBottomBar = (active) => {
     case 1:
       router.push({
         path: "/oa/leaveApply/add",
-        query: { id: props.id, mode: "edit" }
+        query: { id: props.id, mode: "edit", billNo: route.query.billNo }
       });
       break;
     case 2:
@@ -334,8 +407,9 @@ const changeBottomBar = (active) => {
 watch(
   route,
   (newVal) => {
-    if (newVal.params.id) {
-      getDetailInfo(newVal.params.id);
+    if (newVal.query.billNo) {
+      getDetailInfo(newVal.query.billNo);
+      getFilesInfo();
     }
   },
   { immediate: true }

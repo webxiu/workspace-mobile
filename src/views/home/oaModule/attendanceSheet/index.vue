@@ -14,7 +14,7 @@ import { getAttendanceSheet, getAttendanceSheetYear } from "@/api/oaModule";
 
 interface AttendanceSheetItemType {
   id: number;
-  userCode: string;
+  staffCode: string;
   staffName: string;
   yearMonthTime: string;
   status: string;
@@ -25,24 +25,33 @@ const route = useRoute();
 const attendanceList = ref<AttendanceSheetItemType[]>([]);
 const yearList = ref<Array<{ text: string; value: string }>>([]);
 const queryParams = reactive({ date: "", status: "" });
+const isLoading = ref(false);
 
 onMounted(() => getYearList());
 
 const onLoad = (data) => {
   if (data) attendanceList.value = data.data;
 };
-const onRefresh = () => getData(true);
+const onRefresh = () => getData();
+
+const getData = () => {
+  isLoading.value = true;
+  getAttendanceSheet(queryParams)
+    .then((res) => {
+      if (res.data) {
+        onLoad(res);
+      }
+    })
+    .finally(() => (isLoading.value = false));
+};
 
 // 获取列表数据
-const { isLoading, getData } = useAxios<
-  AttendanceSheetItemType[],
-  typeof getAttendanceSheet
->({
-  initValue: [],
-  api: getAttendanceSheet,
-  params: queryParams,
-  callback: onLoad,
-});
+// const { isLoading, getData } = useAxios<AttendanceSheetItemType[], typeof getAttendanceSheet>({
+//   initValue: [],
+//   api: getAttendanceSheet,
+//   params: queryParams,
+//   callback: onLoad
+// });
 
 // 获取年份
 const getYearList = async () => {
@@ -56,6 +65,7 @@ const getYearList = async () => {
       return { text: year, value: year };
     });
     queryParams.date = maxYear;
+    // getData();
     yearList.value = [{ text: "全部", value: "" }, ...yearOptions];
   } catch (error) {
     showToast({ message: "获取年份失败", position: "top" });
@@ -63,12 +73,15 @@ const getYearList = async () => {
 };
 
 const onJumpDetail = (item: AttendanceSheetItemType) => {
-  router.push(
-    `/oa/attendanceSheet/${item.id}?userCode=${item.userCode}&yearMonthTime=${item.yearMonthTime}`
-  );
+  router.push(`/oa/attendanceSheet/${item.id}?userCode=${item.staffCode}&yearMonthTime=${item.yearMonthTime}`);
 };
 
 watch(route, () => onRefresh());
+
+watch(
+  () => queryParams.date,
+  () => getData()
+);
 </script>
 
 <template>
@@ -79,45 +92,23 @@ watch(route, () => onRefresh());
       </van-dropdown-menu>
     </van-sticky>
     <van-pull-refresh v-model="isLoading" @refresh="onRefresh" class="flex-1">
-      <van-list
-        v-model:loading="isLoading"
-        :finished="true"
-        finished-text="没有更多了"
-        @load="onLoad"
-        class="p-16 box-border"
-        v-if="attendanceList.length > 0"
-      >
-        <van-cell
-          v-for="(item, index) in attendanceList"
-          :key="item.id"
-          class="customer-cell"
-          @click="onJumpDetail(item)"
-        >
+      <van-list v-model:loading="isLoading" :finished="true" finished-text="没有更多了" @load="onLoad" class="p-16 box-border" v-if="attendanceList.length > 0">
+        <van-cell v-for="(item, index) in attendanceList" :key="item.id" class="customer-cell" @click="onJumpDetail(item)">
           <div class="flex just-between">
             <div class="ui-va-m">
               <span class="custom-index">{{ index + 1 }}</span>
-              <span class="ml-8 color-333">
-                【{{ item.staffName }} - {{ item.yearMonthTime }}】
-              </span>
+              <span class="ml-8 color-333"> 【{{ item.staffName }} - {{ item.yearMonthTime }}】 </span>
             </div>
-            <van-button
-              type="primary"
-              size="mini"
-              :color="statusObj[item.status]?.color"
-            >
+            <van-button type="primary" size="mini" :color="statusObj[item.status]?.color">
               {{ statusObj[item.status]?.title }}
             </van-button>
           </div>
           <div class="flex just-between align-end mt-46">
             <div>
               <van-icon name="underway-o" />
-              <span class="ml-8 color-333">
-                考勤月份：{{ item.yearMonthTime }}
-              </span>
+              <span class="ml-8 color-333"> 考勤月份：{{ item.yearMonthTime }} </span>
             </div>
-            <van-button type="primary" plain size="mini" style="border: none">
-              详情<van-icon name="arrow" />
-            </van-button>
+            <van-button type="primary" plain size="mini" style="border: none"> 详情<van-icon name="arrow" /> </van-button>
           </div>
         </van-cell>
       </van-list>

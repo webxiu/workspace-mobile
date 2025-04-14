@@ -12,24 +12,22 @@
         <div class="next" @click="setDay(1)">后一天</div>
       </div>
     </van-sticky>
-    <van-pull-refresh @refresh="onRefresh" class="flex-1 ui-ovy-a">
-      <div ref="scrollRef" class="ui-w-100 ui-h-100">
-        <van-list finished-text="没有更多了" :finished="true" class="p-20 box-border" v-if="dataList.length > 0">
-          <van-cell v-for="(item, index) in dataList" :key="item.id" class="border-line mb-16 border-10">
-            <div v-for="(cell, index) in itemList" :key="index" class="flex color-333">
-              <span><van-icon :name="cell.icon" class="ui-va-m fw-700" /></span>
-              <span class="ellipsis">
-                <span class="ml-8 label-colon">
-                  <span class="label-name">{{ cell.label }}</span>
-                </span>
-                <span>{{ cell.format ? cell.format(item) : item[cell.value] }}</span>
+    <van-pull-refresh v-model="loading" @refresh="onRefresh" class="flex-1 ui-ovy-a">
+      <van-list finished-text="没有更多了" :finished="true" class="p-20 box-border" v-if="dataList.length > 0">
+        <van-cell v-for="(item, index) in dataList" :key="item.id" class="border-line mb-16 border-10">
+          <div v-for="(cell, index) in itemList" :key="index" class="flex color-333">
+            <span><van-icon :name="cell.icon" class="ui-va-m fw-700" /></span>
+            <span class="ellipsis">
+              <span class="ml-8 label-colon">
+                <span class="label-name">{{ cell.label }}</span>
               </span>
-            </div>
-          </van-cell>
-        </van-list>
-        <van-empty v-else description="暂无数据" />
-        <van-back-top />
-      </div>
+              <span>{{ cell.format ? cell.format(item) : item[cell.value] }}</span>
+            </span>
+          </div>
+        </van-cell>
+      </van-list>
+      <van-empty v-else description="暂无数据" />
+      <van-back-top />
     </van-pull-refresh>
   </div>
 </template>
@@ -39,13 +37,10 @@ import dayjs from "dayjs";
 import { formatDate } from "@/utils/common";
 import { closeToast, showLoadingToast } from "vant";
 import { ref, onMounted, computed, reactive } from "vue";
-import { useUtils } from "@/components/HxDrawer/useUtils";
 import { attendanceRecordList, AttendanceRecordItemType } from "@/api/oaModule";
 import { getLoginInfo } from "@/utils/storage";
 
 const currentDate = dayjs().format("YYYY-MM-DD");
-const loginInfo = getLoginInfo();
-const scrollRef = ref();
 const loading = ref(false);
 const showPicker = ref(false);
 const date = ref(currentDate);
@@ -61,15 +56,6 @@ const itemList = reactive([
 
 onMounted(() => {
   getData();
-  if (loginInfo.userCode === atob("NDg1")) return; // test user
-  useUtils(scrollRef.value, ({ el, deltaX, duration, direction }) => {
-    if (["up", "down"].includes(direction)) return;
-    const distance = Math.abs(deltaX);
-    const type = direction === "right" ? -1 : 1;
-    if ((duration < 300 && distance > 10) || distance > window.innerWidth / 3) {
-      setDay(type);
-    }
-  });
 });
 
 const switchDate = (type: number) => {

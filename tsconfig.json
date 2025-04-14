@@ -5,6 +5,7 @@
     "module": "ESNext",
     "lib": ["esnext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
+    "allowJs": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -23,7 +24,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "~/*": ["./*"]
-    },
+    }
   },
   "typeRoots": ["./types", "./node_modules/@types/"],
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],

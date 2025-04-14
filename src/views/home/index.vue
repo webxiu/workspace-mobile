@@ -14,13 +14,18 @@ import { version } from "../../../package.json";
 import MyIcon from "@/components/MyIcon/index.vue";
 import { useUserStore } from "@/store/modules/user";
 import { UserAuthItemType } from "@/api/types";
+import { checkOnlineUser } from "@/hooks/websocketOnline";
+import { orgDomain } from "@/permission";
 
 const router = useRouter();
 const renderRoutes = ref<any[]>([]);
 const curYear = dayjs().format("YYYY");
 const sLoading = ref(false);
+const loginInfo = getLoginInfo();
 
-onMounted(() => getAuthList());
+onMounted(() => {
+  getAuthList();
+});
 
 const onRefresh = () => {
   sLoading.value = true;
@@ -31,6 +36,7 @@ const onRefresh = () => {
 };
 
 const getAuthList = (routeList?: UserAuthItemType[]) => {
+  checkOnlineUser(loginInfo.userCode, orgDomain);
   const authList = routeList || getLoginInfo().authList;
   const authRoutes = authList
     ?.filter((item) => !item.isLeaf)
@@ -67,30 +73,31 @@ const onClickItem = (item: RouteConfigRawType, cell: RouteConfigRawType) => {
 <template>
   <div class="workspace flex-col just-between">
     <van-pull-refresh v-model="sLoading" @refresh="onRefresh" class="flex-1 ui-ovy-a">
-      <!-- 后端返回的权限菜单结合路由表渲染 -->
-      <div v-for="item in renderRoutes" class="flex-1">
-        <div class="cate-title" v-if="item.menuName">{{ item.menuName }}</div>
-        <van-grid :column-num="3" :gutter="10" :border="false">
-          <template v-for="cell in item.children">
-            <van-grid-item
-              class="no-select"
-              :class="{ disable: cell.meta.disable }"
-              v-if="cell.meta && !cell.meta.hidden && !cell.meta.disable"
-              @click="onClickItem(item, cell)"
-            >
-              <template #icon>
-                <MyIcon :iconClass="cell.meta.icon" class-name="iconClass" />
-              </template>
-              <template #text>
-                <span class="icon-text-span">
-                  {{ cell.meta.title }}
-                </span>
-              </template>
-            </van-grid-item>
-          </template>
-        </van-grid>
+      <div class="flex-1">
+        <div v-for="item in renderRoutes" class="flex-1">
+          <div class="cate-title" v-if="item.menuName">{{ item.menuName }}</div>
+          <van-grid :column-num="3" :gutter="10" :border="false">
+            <template v-for="cell in item.children">
+              <van-grid-item
+                class="no-select"
+                :class="{ disable: cell.meta.disable }"
+                v-if="cell.meta && !cell.meta.hidden && !cell.meta.disable"
+                @click="onClickItem(item, cell)"
+              >
+                <template #icon>
+                  <MyIcon :iconClass="cell.meta.icon" class-name="iconClass" />
+                </template>
+                <template #text>
+                  <span class="icon-text-span">
+                    {{ cell.meta.title }}
+                  </span>
+                </template>
+              </van-grid-item>
+            </template>
+          </van-grid>
+        </div>
+        <van-empty v-if="renderRoutes?.length === 0" image-size="100" description="暂无数据" style="margin-top: 20%" />
       </div>
-      <van-empty v-if="renderRoutes.length === 0" image-size="100" description="暂无数据" style="margin-top: 20%" />
       <van-divider style="padding: 15px 0; font-size: 12px">©2023-{{ curYear }} Deogra &nbsp;{{ "v" + version }}</van-divider>
     </van-pull-refresh>
   </div>
@@ -118,16 +125,20 @@ const onClickItem = (item: RouteConfigRawType, cell: RouteConfigRawType) => {
     font-size: 26px;
     line-height: 16px;
   }
-}
-:deep(.van-grid-item) {
-  &:hover {
-    cursor: pointer;
-  }
-  &.disable {
+  :deep(.van-grid-item) {
     &:hover {
-      cursor: not-allowed;
+      cursor: pointer;
     }
-    opacity: 0.5;
+    &.disable {
+      &:hover {
+        cursor: not-allowed;
+      }
+      opacity: 0.5;
+    }
+  }
+  :deep(.van-pull-refresh__track) {
+    display: flex;
+    flex-direction: column;
   }
 }
 </style>

@@ -95,6 +95,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+$colPadding: 10px;
 .hx-table {
   overflow-x: auto;
   border: 1px solid #eee;
@@ -114,7 +115,7 @@ export default defineComponent({
   }
   thead td.row-item {
     line-height: 20px;
-    padding: 20px 20px;
+    padding: 20px $colPadding;
     font-weight: 700;
     white-space: nowrap;
   }
@@ -131,8 +132,7 @@ export default defineComponent({
     border-top: none;
   }
   tbody td.row-item {
-    padding: 5px;
-    padding: 20px 20px;
+    padding: 6px $colPadding;
     line-height: 20px;
     .table-cell-cont {
       width: inherit;

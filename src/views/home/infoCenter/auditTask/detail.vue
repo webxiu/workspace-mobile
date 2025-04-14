@@ -29,7 +29,6 @@
               </van-row>
             </div>
             <div v-if="item.formModel.includes('etail')">
-              <!-- accordion -->
               <van-collapse v-model="activeNames1" key="inner">
                 <van-collapse-item
                   :title="item.itemList?.length === 1 ? '' : child.itemName || '-'"
@@ -43,9 +42,6 @@
                     <div class="des-item" v-for="el in child.detailList">
                       <van-row :wrap="false" class="flex-col" v-if="el.readable">
                         <van-col span="24">
-                          <!-- <a target="_blank" v-if="el.inputItemModel === 'file' && el.inputItemFieldName !== 'fileList'" :href="vPath + el.inputItemValue">
-                            点击预览或下载
-                          </a> -->
                           <div class="fieldWrapper" v-if="el.inputItemFieldName === 'applyVehicleUsage'">
                             <div class="lab">
                               {{ el.inputItemName }}
@@ -95,6 +91,44 @@
                               </div>
                               <div v-if="el.inputItemValue" style="color: #1989fa" @click="viewAttr(el, 'fileChange')">
                                 {{ el.inputItemValue.split("/").at(-1) ?? "" }}
+                              </div>
+                              <div v-else style="font-size: 12px; padding: 8px 8px 8px 0">暂无附件信息</div>
+                            </div>
+                          </div>
+
+                          <!-- 针对绩效等调整 -->
+                          <div
+                            v-else-if="el.inputItemFieldName === 'fileUrl'"
+                            class="fieldWrapper"
+                            style="display: flex; flex-direction: column; align-items: flex-start"
+                          >
+                            <div>
+                              <div class="lab">
+                                {{ el.inputItemName }}
+                              </div>
+                              <div v-if="el.inputItemValue" style="color: #1989fa" @click="viewAttr(el, 'fileChange')">
+                                {{ el.inputItemValue.split("/").at(-1) ?? "" }}
+                              </div>
+                              <div v-else style="font-size: 12px; padding: 8px 8px 8px 0">暂无附件信息</div>
+                            </div>
+                          </div>
+
+                          <!-- 针对请假单多附件 -->
+                          <div
+                            class="fieldWrapper"
+                            style="display: flex; flex-direction: column; align-items: flex-start"
+                            v-else-if="el.inputItemFieldName === 'fileUrls' && el.inputItemName === '附件'"
+                          >
+                            <div>
+                              <div class="lab">
+                                {{ el.inputItemName }}
+                              </div>
+                              <div v-if="el.inputItemValue && Array.isArray(el.inputItemValue) && el.inputItemValue.length">
+                                <div v-for="fileItem in el.inputItemValue">
+                                  <div style="color: #1989fa" @click="viewAttr(fileItem, 'askLeave')">
+                                    {{ fileItem.split("/").at(-1) ?? "" }}
+                                  </div>
+                                </div>
                               </div>
                               <div v-else style="font-size: 12px; padding: 8px 8px 8px 0">暂无附件信息</div>
                             </div>
@@ -484,7 +518,6 @@ import HxTable, { TableColumnType } from "@/components/HxTable/index.vue";
 
 defineOptions({ name: "auditTaskDetail" });
 
-const vPath = import.meta.env.VITE_IMAGEURL_PREFIX;
 const carFormRef = ref();
 const showActionMenu = ref(false);
 const outApplyDtoList = ref([]);
@@ -492,8 +525,6 @@ const carSelectOps = ref([]);
 const showPicker = ref(false);
 const commentRef = ref();
 const btnLoading = ref(false);
-
-const userStore = useUserStore();
 
 defineProps({ id: String });
 const router = useRouter();
@@ -572,6 +603,13 @@ const onSelectActionMenu = (val) => {
 
 const viewAttr = (fileItem, viewFileType?) => {
   const kkViewUrl = getKKViewUrl();
+
+  if (viewFileType === "askLeave") {
+    const vPath = `${kkViewUrl}api${fileItem}`;
+    const url2 = kkViewUrl + "preview/onlinePreview?url=" + encodeURIComponent(Base64.encode(vPath));
+    window.location.href = url2;
+    return;
+  }
   if (viewFileType === "fileChange") {
     const vPath = `${kkViewUrl}api${fileItem.inputItemValue}`;
     const url2 = kkViewUrl + "preview/onlinePreview?url=" + encodeURIComponent(Base64.encode(vPath));
@@ -710,6 +748,9 @@ const getDetailInfo = () => {
   })
     .then(({ data }) => {
       if (data?.length) {
+        if (data[0].formModel === "staffSalaryCalculate") {
+          data[0].formModel = data[0].formModel + "Detail";
+        }
         const columns: TableColumnType[] = [];
         sLoading.value = false;
         detailInfoList.value = data;
@@ -984,10 +1025,6 @@ const fetchRemarks = () => {
 
 const findOptinNameByOptionValue = (optionValue) => {
   return vehicleUsageOpts.value.find((item) => item.optionValue == optionValue)?.optionName ?? "";
-};
-
-const findModeOptinNameByOptionValue = (optionValue) => {
-  return deliverablesChangeModeOpts.value.find((item) => item.optionValue == optionValue)?.optionName ?? "";
 };
 
 const getSelectOpts = () => {

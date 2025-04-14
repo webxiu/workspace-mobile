@@ -95,7 +95,7 @@ const submitFeedBack = () => {
 // 提交反馈信息
 const onSubmitFeedback = () => {
   submitPayRollFeed({
-    payslipId: route.query.payslipId || props.detailInfo?.Id,
+    payslipId: route.query.payslipId || props.detailInfo?.id,
     gzmbb: route.query.gzmbb,
     userCode: appStore.userInfo.userCode,
     content: feedBackValue.value,

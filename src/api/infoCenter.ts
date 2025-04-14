@@ -5,10 +5,10 @@
  * @Last Modified time: 2024-09-02 14:19:02
  */
 
-import { AuditTaskInfoItemType, DetailListItemType } from "./types";
+import { AuditTaskInfoItemType, BillNoForProduceType, DetailListItemType } from "./types";
 import http, { AxiosRequestConfig } from "@/utils/request";
 
-export type { AuditTaskInfoItemType, DetailListItemType };
+export type { AuditTaskInfoItemType, DetailListItemType, BillNoForProduceType };
 
 /**
  * 信息中心-接口请求说明:
@@ -56,7 +56,7 @@ export const approvalNodeDetails = (params) => {
 };
 /** 金蝶业务审批(我的待办) - 票据编号获取产品详细信息*/
 export const detailsByBillNoforProduce = (params) => {
-  return http.request({
+  return http.request<BillNoForProduceType>({
     url: "/app/qywx/workspace/jindieapproval/getdetailsbybillnoforproduce",
     method: "POST",
     data: params

@@ -1,10 +1,11 @@
-import { LoginUserInfoType, UserAuthItemType, logout, queryKKViewUrl, queryUserAuthList, queryUserInfo } from "@/api/user";
+import { LoginUserInfoType, UserAuthItemType, logout, queryKKViewUrl, queryLoginParamsInfo, queryUserAuthList, queryUserInfo } from "@/api/user";
 import { closeToast, showLoadingToast } from "vant";
-import { getLoginInfo, getWeChatCode, removeCookie, removeLoginInfo, setKKViewUrl, setLoginInfo } from "@/utils/storage";
+import { getLoginInfo, getWeChatCode, removeCookie, setKKViewUrl, setLoginInfo } from "@/utils/storage";
 
 import { defineStore } from "pinia";
 import router from "@/router";
 import { store } from "@/store";
+import { useAppStore } from "@/store/modules/app";
 
 export type { LoginUserInfoType };
 
@@ -29,10 +30,13 @@ export const useUserStore = defineStore({
       if (showLoading) showLoadingToast({ message: "正在登录...", duration: 5000 });
       return new Promise<LoginUserInfoType>(async (resolve, reject) => {
         try {
+          const { data: appConfig } = await queryLoginParamsInfo({});
+          useAppStore().setAppConfig(appConfig);
           const { data: viewUrl } = await queryKKViewUrl();
           const { data: userInfo } = await queryUserInfo({});
           const authList = await this.getUserAuthList(userInfo.id);
           const loginInfo = { ...userInfo, userNo: userInfo.userCode, authList };
+          this.$state.userInfo = loginInfo;
           setKKViewUrl(viewUrl);
           setLoginInfo(loginInfo);
           resolve(loginInfo);
@@ -58,7 +62,6 @@ export const useUserStore = defineStore({
     /** 退出登录 */
     logout() {
       removeCookie();
-      removeLoginInfo();
       const { code = "", state = "" } = getWeChatCode();
       router.replace({ path: "/login", query: { code, state } });
     }

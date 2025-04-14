@@ -1,12 +1,7 @@
 <template>
   <div class="detail-page">
-    <van-notice-bar
-      class="user-title"
-      color="#1989fa"
-      background="#ecf9ff"
-      left-icon="info-o"
-    >
-      【{{ detailInfo.Name }} {{ detailInfo.YearMonth }}】工资单
+    <van-notice-bar class="user-title" color="#1989fa" background="#ecf9ff" left-icon="info-o">
+      【{{ detailInfo.staffName }} {{ route.query.yearMonth }}】工资单
     </van-notice-bar>
     <div>
       <div class="detail">
@@ -14,9 +9,7 @@
           <van-row>
             <van-col class="label" span="11">{{ item.title }}：</van-col>
             <!-- <van-col class="value">{{ item.value || "-" }}</van-col> -->
-            <van-col :class="[calcItemRes(item) ? 'redStyle' : '', 'value']">{{
-              item.value || "- -"
-            }}</van-col>
+            <van-col :class="[calcItemRes(item) ? 'redStyle' : '', 'value']">{{ item.value || "- -" }}</van-col>
           </van-row>
         </div>
       </div>
@@ -27,20 +20,14 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { watch, ref } from "vue";
+import { useRoute } from "vue-router";
 const props = defineProps(["detailInfo", "templatesList"]);
 
 const salaryDicts = ref([]) as any;
+const route = useRoute();
 
 const calcItemRes = (item) => {
-  return (
-    item.label === "SD" ||
-    item.label === "YangLBX" ||
-    item.label === "YiLBX" ||
-    item.label === "SYBX" ||
-    item.label === "ZFGJJ" ||
-    item.label === "HS" ||
-    item.label === "DJGRSDS"
-  );
+  return props.templatesList.find((el) => el.fieldName === item.label).deduction === "是";
 };
 
 watch(props, () => {
@@ -48,19 +35,16 @@ watch(props, () => {
     return {
       label: item.fieldName,
       title: item.fieldTitle,
-      value: "",
+      value: ""
     };
   });
+  console.log(arr, "arr==");
   salaryDicts.value = arr.map((item) => ({
     label: item.label,
-    value:
-      (calcItemRes(item) ? "-" : "") +
-      (props.detailInfo[item.label] === "-"
-        ? ""
-        : props.detailInfo[item.label] || ""),
+    value: (calcItemRes(item) ? "-" : "") + (props.detailInfo[item.label] === "-" ? "" : props.detailInfo[item.label] || ""),
     // : props.detailInfo[item.label],
     // value: props.detailInfo[item.label],
-    title: item.title,
+    title: item.title
   }));
 });
 </script>

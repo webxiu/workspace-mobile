@@ -95,7 +95,7 @@ const onRefresh = () => {
 };
 
 const clickDetail = (item) => {
-  router.push(`/oa/leaveApply/${item.id}`);
+  router.push(`/oa/leaveApply/${item.id}?billNo=${item.billNo}`);
 };
 
 // 获取列表

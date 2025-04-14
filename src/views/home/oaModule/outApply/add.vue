@@ -20,8 +20,14 @@
           v-model="destination"
           name="destination"
           label="目的地"
-          placeholder="填写应简明扼要，建议10字以内"
+          placeholder="点击右侧图标进行选择"
           required
+          readonly
+          rows="1"
+          autosize
+          type="textarea"
+          right-icon="location"
+          @click-right-icon="clickDestination"
           :rules="[{ required: true, message: '目的地不能为空' }]"
         />
 
@@ -187,6 +193,9 @@
         <van-button round block type="primary" native-type="submit" :loading="loading"> 保存 </van-button>
       </div>
     </van-form>
+    <van-popup v-model:show="showMapRight" position="right" :z-index="997" :style="{ width: '100%', height: '100%' }">
+      <tdt-map @close="showMapRight = false" @confirm="confirmRight" />
+    </van-popup>
   </div>
 </template>
 
@@ -201,10 +210,12 @@ import dayjs from "dayjs";
 import { addGoOutList, fetchGoOutList, updateGoOutList } from "@/api/outApply";
 import { carSourceContantInfo } from "@/utils/common";
 import { commonSubmit } from "@/api/common";
+import tdtMap from "./tdtMap.vue";
 
 const route = useRoute();
 const router = useRouter();
 const saveDataId = ref("");
+const showMapRight = ref(false);
 
 defineOptions({
   name: "AddApplyList"
@@ -250,6 +261,17 @@ const showEndTime = ref(false);
 const driver = ref("");
 const addResId = ref("");
 const plateNumber = ref("");
+const fullData = ref({});
+
+const confirmRight = (val, fullInfo) => {
+  if (fullInfo) fullData.value = fullInfo;
+  destination.value = val;
+  showMapRight.value = false;
+};
+
+const clickDestination = () => {
+  showMapRight.value = true;
+};
 
 const changeSource = (val) => {
   if (val === "其它") {
@@ -351,12 +373,16 @@ const clearFormData = () => {
   remarks.value = "";
   vehicleSource.value = "派车";
   vehicleUsage.value = 0;
-  startDate.value = "";
-  startTime.value = "";
-  endDate.value = "";
-  endTime.value = "";
+
   driver.value = "";
   withUserDict = {};
+
+  startDate.value = dayjs(new Date()).format("YYYY-MM-DD");
+  startTime.value = dayjs(new Date()).hour() + curMin();
+  endDate.value = dayjs(new Date()).format("YYYY-MM-DD");
+  endTime.value = dayjs(new Date()).hour() + curMin();
+
+  saveDataId.value = "";
 };
 
 // 表单提交事件
@@ -377,7 +403,8 @@ const onSubmit = (values) => {
       applyDriver: values.driver,
       applyVehicleUsage: vehicleUsage.value,
       userNames: Object.values(withUserDict).filter((item) => item !== userInfoData.value.userName),
-      remarks: remarks.value
+      remarks: remarks.value,
+      ...fullData.value
     };
     updateGoOutList(editConfig)
       .then((res) => {
@@ -408,7 +435,8 @@ const onSubmit = (values) => {
     applyDriver: values.driver,
     goOutVehicleDTO: { plateNumber: values.plateNumber },
     remarks: remarks.value,
-    userNames: Object.values(withUserDict)
+    userNames: Object.values(withUserDict),
+    ...fullData.value
   };
   const isValidDate = dayjs(addParams.planOutDate).isBefore(dayjs(addParams.planBackDate));
 
@@ -525,6 +553,10 @@ const getEditInfo = () => {
 <style lang="scss" scoped>
 .form-content {
   padding-bottom: 32px;
+
+  :deep(.van-field__right-icon .van-icon) {
+    color: #1989fa;
+  }
 
   .popup-scroll {
     height: 50vh;

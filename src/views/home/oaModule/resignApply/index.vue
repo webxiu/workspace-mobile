@@ -2,7 +2,7 @@
   <div class="wrap flex-col ui-h-100">
     <van-sticky>
       <div class="filter-area">
-        <van-search v-model="formData.staffName" show-action shape="round" placeholder="请输入姓名" @search="getData" />
+        <van-search v-model="formData.staffName" shape="round" placeholder="请输入姓名/工号" @search="getData" />
       </div>
     </van-sticky>
 

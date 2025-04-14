@@ -6,11 +6,19 @@
       <van-image v-else :src="fullImgStr" alt="图片加载失败" class="sign-img" />
     </div>
     <div class="button-list" v-if="!fullImgStr">
-      <van-button icon="revoke" class="flex-1" @click="onRevoke" />
-      <van-button icon="replay" class="flex-1" @click="onRecover" style="margin-left: var(--van-padding-base)" />
-      <van-button icon="close" class="flex-1" @click="onClear" style="margin-left: var(--van-padding-base)" />
+      <van-button size="small" icon="revoke" class="flex-1" @click="onRevoke" />
+      <van-button size="small" icon="replay" class="flex-1" @click="onRecover" style="margin-left: var(--van-padding-base)" />
+      <van-button size="small" icon="close" class="flex-1" @click="onClear" style="margin-left: var(--van-padding-base)" />
+      <van-button
+        size="small"
+        icon="brush-o"
+        class="flex-1"
+        @click="onEraser"
+        :type="brushStatus ? 'success' : 'default'"
+        style="margin-left: var(--van-padding-base)"
+      />
       <Model @change="changeSet" ref="modelRef" />
-      <van-button type="primary" class="flex-3" @click="onSubmit"> 确认提交 </van-button>
+      <van-button size="small" type="primary" class="flex-3" @click="onSubmit"> 确认提交 </van-button>
     </div>
   </div>
 </template>
@@ -43,6 +51,7 @@ const props = withDefaults(defineProps<Props>(), {
 const signInstance = ref<SignName>();
 const signRef = ref<HTMLElement>();
 const modelRef = ref();
+const brushStatus = ref(false);
 
 // 传了数组并且有值不为空
 const hasImage = computed(() => {
@@ -85,6 +94,11 @@ function onClear() {
   modelRef.value?.onReset();
 }
 
+function onEraser() {
+  const isActive = signInstance.value?.onEraser();
+  brushStatus.value = !!isActive;
+}
+
 // 提交
 function onSubmit() {
   const instance = signInstance.value;
@@ -108,6 +122,7 @@ function onSubmit() {
 }
 .sign-wrap {
   width: 100%;
+  height: 100%;
   padding: 10px;
   box-sizing: border-box;
   background-color: #fff;

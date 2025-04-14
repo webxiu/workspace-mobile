@@ -194,34 +194,6 @@
       <van-tabbar-item icon="delete-o" v-show="/(0|3)/.test(detailInfo.billState + '')">删除</van-tabbar-item>
       <van-tabbar-item icon="passed" v-show="/(0|3)/.test(detailInfo.billState + '')">提交</van-tabbar-item>
       <van-tabbar-item icon="revoke" v-show="detailInfo.billState === 1">撤销</van-tabbar-item>
-      <van-dialog
-        v-model:show="showRevoke"
-        :confirmButtonDisabled="confirmButtonDisabled"
-        title="撤销当前外出申请单"
-        show-cancel-button
-        :before-close="confirmRevoke"
-      >
-        <van-form>
-          <van-cell-group inset style="margin-top: 10px">
-            <van-field
-              ref="inputRef"
-              v-model="revokeReason"
-              rows="2"
-              autosize
-              label="留言"
-              type="textarea"
-              maxlength="50"
-              placeholder="请填写撤销原因"
-              show-word-limit
-              colon
-              clearable
-              required
-              label-align="right"
-              :rules="[{ required: true, message: '请填写撤销原因' }]"
-            />
-          </van-cell-group>
-        </van-form>
-      </van-dialog>
 
       <van-tabbar-item icon="todo-list-o" v-show="[1, 2].includes(detailInfo.billState)">审核节点详情</van-tabbar-item>
       <!-- 审核节点详情  start-->
@@ -246,7 +218,7 @@ import { useRoute, useRouter } from "vue-router";
 import { closeToast, showConfirmDialog, showLoadingToast, showNotify } from "vant";
 
 import { useAppStore } from "@/store/modules/app";
-import { deleteGoOutList, fetchGoOutList, submitGoOutList, revokeGoOutList } from "@/api/outApply";
+import { deleteGoOutList, fetchGoOutList, submitGoOutList, revokeGoOutList, commonRevokeList } from "@/api/outApply";
 import { queryUserInfo } from "@/api/user";
 import { carSourceContantInfo } from "@/utils/common";
 import { commonSubmit } from "@/api/common";
@@ -335,34 +307,32 @@ const confirmRevoke = (action: string): boolean | Promise<boolean> => {
       resolve(true);
       return;
     }
-    if (revokeReason.value) {
-      showLoadingToast({
-        message: "处理中",
-        forbidClick: true,
-        duration: 5000
-      });
-      confirmButtonDisabled.value = true;
-      revokeGoOutList({ id: route.query.id, remark: revokeReason.value })
-        .then((res) => {
-          if (res.data) {
-            resolve(true);
-            showNotify({ type: "success", message: (res as any).message });
-            setTimeout(() => router.push("/oa/outApply"), 100);
-          } else {
-            resolve(false);
-            confirmButtonDisabled.value = false;
-            showNotify({
-              type: "danger",
-              message: "操作失败，请联系开发人员处理！"
-            });
-          }
-        })
-        .finally(() => {
-          closeToast();
+    showLoadingToast({
+      message: "处理中",
+      forbidClick: true,
+      duration: 5000
+    });
+    // confirmButtonDisabled.value = true;
+    commonRevokeList({ billNo: detailInfo.value.billNo })
+      .then((res) => {
+        if (res.data) {
+          resolve(true);
+          showNotify({ type: "success", message: (res as any).message });
+          setTimeout(() => router.push("/oa/outApply"), 100);
+        } else {
+          resolve(true);
+        }
+      })
+      .catch((err) => {
+        showNotify({
+          type: "danger",
+          message: err.message
         });
-    }
-    resolve(false);
-    (inputRef.value as any).validate();
+        resolve(true);
+      })
+      .finally(() => {
+        closeToast();
+      });
   });
 };
 
@@ -375,7 +345,12 @@ const getDetailInfo = (id) => {
 
 const handleAction = (actionType) => {
   if (actionType === "revoke") {
-    showRevoke.value = true;
+    // showRevoke.value = true;
+    showConfirmDialog({
+      title: "温馨提示",
+      message: "确认执行撤销操作吗？",
+      beforeClose: confirmRevoke
+    }).catch(() => {});
     return;
   }
   showConfirmDialog({

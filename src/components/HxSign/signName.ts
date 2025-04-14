@@ -13,11 +13,13 @@ interface PathType {
   lineWidth: number;
   lineStyle: string;
   move: number[];
+  eraseMode: boolean;
   line: {
     x: number;
     y: number;
     lineWidth: number;
     lineStyle: string;
+    eraseMode: boolean;
   }[];
 }
 
@@ -28,7 +30,7 @@ const defaultOption: OptionsType = {
   lineWidth: 3,
   lineStyle: "#000000",
   fillStyle: "#ffffff",
-  lineCap: "round",
+  lineCap: "round"
 };
 
 class SignName {
@@ -42,6 +44,7 @@ class SignName {
   recoverList: PathType[] = [];
   options: OptionsType = { ...defaultOption };
   ratio = 1;
+  eraseMode: boolean = false;
 
   constructor(selector, options: Partial<OptionsType>) {
     this.updateOption(options);
@@ -73,15 +76,11 @@ class SignName {
     const borderBottom = parseInt(style.borderBottomWidth, 10);
     const borderLeft = parseInt(style.borderLeftWidth, 10);
 
-    const contentWidth =
-      element.offsetWidth -
-      (paddingLeft + paddingRight + borderLeft + borderRight);
-    const contentHeight =
-      element.offsetHeight -
-      (paddingTop + paddingBottom + borderTop + borderBottom);
+    const contentWidth = element.offsetWidth - (paddingLeft + paddingRight + borderLeft + borderRight);
+    const contentHeight = element.offsetHeight - (paddingTop + paddingBottom + borderTop + borderBottom);
     return {
       width: contentWidth,
-      height: contentHeight,
+      height: contentHeight
     };
   };
 
@@ -89,6 +88,7 @@ class SignName {
   private addEvent = (el: Element, eventName, cb: Function) => {
     const fn = (ev: TouchEvent) => {
       ev.preventDefault();
+      ev.stopPropagation();
       cb(ev.changedTouches[0]);
     };
     el.addEventListener(eventName, fn);
@@ -105,6 +105,7 @@ class SignName {
     this.isDrawing = true;
     const x = ev.clientX - this.canvas.offsetLeft;
     const y = ev.clientY - this.canvas.offsetTop;
+    this.setErase(this.eraseMode);
     this.drawLine(x, y, false);
     this.recoverList = [];
     this.historyList.push({
@@ -112,6 +113,7 @@ class SignName {
       lineStyle: this.options.lineStyle,
       move: [x, y],
       line: [],
+      eraseMode: this.eraseMode
     });
   };
 
@@ -125,6 +127,7 @@ class SignName {
         y: my,
         lineWidth: this.options.lineWidth,
         lineStyle: this.options.lineStyle,
+        eraseMode: this.eraseMode
       });
     }
   };
@@ -172,6 +175,7 @@ class SignName {
       this.ctx.beginPath();
       this.ctx.strokeStyle = m.lineStyle;
       this.ctx.lineWidth = m.lineWidth * this.ratio;
+      this.setErase(m.eraseMode);
       this.ctx.moveTo(m.move[0] * this.ratio, m.move[1] * this.ratio);
       m.line.forEach((v) => {
         this.ctx.strokeStyle = v.lineStyle;
@@ -190,6 +194,18 @@ class SignName {
     this.historyList = [];
     this.recoverList = [];
     this.options = { ...defaultOption };
+  };
+
+  setErase = (eraseMode) => {
+    const eraseType = eraseMode ? "destination-out" : "source-over";
+    this.ctx.globalCompositeOperation = eraseType; // 橡皮擦
+  };
+
+  onEraser = (size = 10) => {
+    this.eraseMode = !this.eraseMode;
+    this.options.lineWidth = defaultOption.lineWidth;
+    if (this.eraseMode) this.options.lineWidth = size; // 加粗橡皮擦
+    return this.eraseMode;
   };
 
   onExport = (mime = "image/png") => {

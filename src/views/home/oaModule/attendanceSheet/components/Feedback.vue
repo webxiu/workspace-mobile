@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-120">
+  <div class="pb-120 flex-1">
     <van-nav-bar title="异常反馈" />
     <van-notice-bar class="fz-24 mt-12" :speed="30" left-icon="volume-o" :text="noticeText" />
     <van-form @submit="onHandleClick">

@@ -2,7 +2,7 @@
  * @Author: lixiuhai
  * @Date: 2023-06-23 10:00:22
  * @Last Modified by: Hailen
- * @Last Modified time: 2024-07-10 16:59:51
+ * @Last Modified time: 2025-02-22 16:15:28
  */
 
 import { getCookie, getLoginInfo, getSignBack, removeCookie, setSignBack, setWeChatCode } from "@/utils/storage";
@@ -20,9 +20,8 @@ const org_domain = import.meta.env.VITE_ORGANIZATION_URL;
 const hostObj = {
   localhost: org_domain,
   "127.0.0.1": org_domain,
-  "192.168.2.202": org_domain,
-  "192.168.2.8": org_domain,
-  "192.168.2.23": org_domain
+  "192.168.2.23": org_domain,
+  "192.168.2.202": org_domain
 };
 
 // PC端企业微信: 需要验证登录密码的路由名称
@@ -62,7 +61,7 @@ router.beforeEach((to, from, next) => {
   const hasCookie = getCookie();
   const state = params.get("state");
   const code = params.get("code");
-  document.title = getPageTitle(title);
+  document.title = getPageTitle(title, to.path);
 
   /** 路由拦截, 弹窗登录 */
   function checkLoginAccess() {

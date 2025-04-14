@@ -5,13 +5,14 @@
  * @Last Modified time: 2024-10-24 11:04:19
  */
 
-import { LoginType, LoginUserInfoType } from "@/api/user";
+import { LoginAppInfoType, LoginType, LoginUserInfoType } from "@/api/user";
 
 import Cookies from "js-cookie";
 import { toParse } from "@/utils/common";
 
 const COOKIE_KEY = "Token";
 const LOGIN_INFO = "Login_Info";
+const APP_INFO = "App_Info";
 const KKVIEW_URL = "kkView_url";
 
 /** ==================================  存储Cookie  ================================== */
@@ -35,6 +36,7 @@ export const setCookie = (cookie: string) => {
  */
 export const removeCookie = () => {
   Cookies.remove(COOKIE_KEY);
+  removeLoginInfo();
 };
 
 /** ==================================  存储用户信息  ================================== */
@@ -58,6 +60,22 @@ export const setLoginInfo = (userInfo: LoginUserInfoType) => {
  */
 export const removeLoginInfo = () => {
   localStorage.removeItem(LOGIN_INFO);
+};
+
+/** ==================================  登录组织、版本、应用信息  ================================== */
+/**
+ * 获取应用参数信息(包含权限列表)
+ */
+export const getAppInfo = (): LoginAppInfoType => {
+  return JSON.parse(localStorage.getItem(APP_INFO) || "{}");
+};
+
+/**
+ * 设置应用参数信息
+ * @param appParam 应用参数信息
+ */
+export const setAppInfo = (appParam: LoginAppInfoType) => {
+  localStorage.setItem(APP_INFO, JSON.stringify(appParam));
 };
 
 /**

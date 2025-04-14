@@ -2,34 +2,28 @@
 import { onMounted, ref } from "vue";
 import PayList from "./PayList.vue";
 import { getPayYears } from "@/api/oaModule";
-import dayjs from "dayjs";
 
 const tabs = [PayList];
 const swipeRef = ref();
 const yearValue = ref("");
-const filterOptions = ref([{ text: "全部", value: "" }]);
+const filterOptions = ref<{ text: string; value: string }[]>([]);
 
 onMounted(() => {
-  getCurrentYear();
   getPayYearsList();
 });
 
-const getCurrentYear = () => {
-  const date = new Date();
-  date.setMonth(date.getMonth() - 1);
-  const curYear = dayjs(date).format("YYYY");
-  yearValue.value = curYear;
+const dropMenuChange = (val) => {
+  yearValue.value = val;
 };
-
-const dropMenuChange = (val) => (yearValue.value = val);
 
 // 获取已发工资年份列表
 const getPayYearsList = () => {
   getPayYears({}).then(({ data }) => {
     if (!data) return;
-    data.forEach(({ year }) => {
-      filterOptions.value.push({ text: year, value: year });
+    data.forEach(({ yearMonth }) => {
+      filterOptions.value.push({ text: yearMonth, value: yearMonth });
     });
+    yearValue.value = filterOptions.value.at(-1)?.value!;
   });
 };
 </script>

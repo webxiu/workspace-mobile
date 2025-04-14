@@ -20,13 +20,19 @@ import { registerStore } from "@/store";
 import router from "@/router";
 import { setupVant } from "@/plugins/setupVant";
 import { useSvgIcon } from "@/icons";
-
+import VueTianditu from "vue-tianditu";
+import "vue-tianditu/lib/style.css";
 // import fastclick from "fastclick";
 
 const app = createApp(App);
 
 // 使用sku组件
 app.use(VanSku);
+
+app.use(VueTianditu, {
+  v: "4.0", //目前只支持4.0版本
+  tk: "ab60b60d17ce8389969a65c6e00a0303"
+});
 // 拖动
 app.use(drag);
 // fastclick.FastClick.attach(document.body);

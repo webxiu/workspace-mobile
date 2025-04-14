@@ -6,29 +6,15 @@
  */ -->
 <template>
   <div class="attendance-detail">
-    <van-swipe
-      class="ui-h-100"
-      ref="swipeRef"
-      :loop="false"
-      :immediate="false"
-      :touchable="false"
-      :show-indicators="false"
-    >
+    <van-swipe class="ui-h-100 flex-1" ref="swipeRef" :loop="false" :immediate="false" :touchable="true" :show-indicators="false">
       <van-swipe-item v-for="(_, idx) in tabs" :key="idx">
         <component :is="tabs[idx]" ref="childRef" @onSubmit="onChange" />
       </van-swipe-item>
     </van-swipe>
-    <van-tabbar
-      v-model="active"
-      inactive-color="#646566"
-      active-color="#00f"
-      @change="onChange"
-    >
+    <van-tabbar v-model="active" inactive-color="#646566" active-color="#00f" @change="onChange">
       <van-tabbar-item icon="label-o">考勤详情</van-tabbar-item>
       <van-tabbar-item icon="edit">签名</van-tabbar-item>
-      <van-tabbar-item icon="smile-comment-o" v-if="isSign">
-        异常反馈
-      </van-tabbar-item>
+      <van-tabbar-item icon="smile-comment-o" v-if="isSign"> 异常反馈 </van-tabbar-item>
     </van-tabbar>
   </div>
 </template>
@@ -60,11 +46,7 @@ onMounted(() => {
 // 获取签名状态
 const getSignStatus = () => {
   getPreviewSignature({ appId }).then((res) => {
-    const statusList = [
-      SignStatus.signed,
-      SignStatus.dossier,
-      SignStatus.exception,
-    ];
+    const statusList = [SignStatus.signed, SignStatus.dossier, SignStatus.exception];
     if (statusList.includes(res.data[0]?.status)) {
       isSign.value = false;
     }
@@ -99,7 +81,14 @@ const onChange = (index: number, isReloadDetail?: boolean) => {
 
 <style lang="scss" scoped>
 .attendance-detail {
-  height: calc(100% - 100px);
+  height: calc(100vh + var(--van-tabbar-height));
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(80px + var(--van-tabbar-height));
+}
+:deep(.van-swipe-item) {
+  display: flex;
+  flex-direction: column;
 }
 :deep(.van-tabbar-item--active) {
   font-weight: 700;

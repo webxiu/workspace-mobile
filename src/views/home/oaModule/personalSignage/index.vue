@@ -107,7 +107,7 @@ const attendanceList = ref([
   // },
   {
     label: "剩余年休假",
-    unit: "天",
+    unit: "小时",
     field: "annualLeave",
     value: "0"
   },
@@ -174,7 +174,7 @@ const getData = () => {
 }
 
 .list-num {
-  width: 100px;
+  //width: 100px;
   text-align: center;
   font-size: 28px;
 }

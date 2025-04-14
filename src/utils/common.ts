@@ -2,7 +2,7 @@
  * @Author: lixiuhai
  * @Date: 2023-06-23 10:02:59
  * @Last Modified by: Hailen
- * @Last Modified time: 2024-10-21 17:20:43
+ * @Last Modified time: 2025-02-22 16:15:22
  */
 
 import { NotifyOptions, NotifyType, showNotify } from "vant";
@@ -12,19 +12,19 @@ import HxForm from "@/components/HxForm/index.vue";
 import { addDialog } from "@/components/ReDialog";
 import { commonBack } from "@/api/common";
 import dayjs from "dayjs";
-
-const title = "德龙工作台";
+import { useAppStoreWithOut } from "@/store/modules/app";
 
 /**
  * 设置网页标题
  * @param pageTitle 标题名称
  * @returns 标题名称
  */
-export const getPageTitle = (pageTitle) => {
-  if (pageTitle) {
-    return `${pageTitle}`;
+export const getPageTitle = (pageTitle, path) => {
+  const orgShortName = useAppStoreWithOut().getAppConfig.orgShortName;
+  if (["/", "/workspace"].includes(path)) {
+    return orgShortName || pageTitle;
   }
-  return `${title}`;
+  return pageTitle;
 };
 
 /** JSON字符串转换对象 */
