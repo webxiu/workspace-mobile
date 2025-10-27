@@ -86,7 +86,6 @@ function onRecover() {
 
 function changeSet(values) {
   signInstance.value?.updateOption(values);
-  signInstance.value?.onRestore();
 }
 
 function onClear() {

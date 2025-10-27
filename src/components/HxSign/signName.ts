@@ -3,6 +3,7 @@ interface OptionsType {
   width: number;
   height: number;
   lineWidth: number;
+  eraseWidth: number;
   lineStyle: string;
   fillStyle: string;
   lineCap: CanvasLineCap;
@@ -13,14 +14,10 @@ interface PathType {
   lineWidth: number;
   lineStyle: string;
   move: number[];
-  eraseMode: boolean;
-  line: {
-    x: number;
-    y: number;
-    lineWidth: number;
-    lineStyle: string;
-    eraseMode: boolean;
-  }[];
+  isErase: boolean;
+  eraseWidth: number;
+  isRestoreErase?: boolean;
+  line: { x: number; y: number }[];
 }
 
 // 默认配置
@@ -28,6 +25,7 @@ const defaultOption: OptionsType = {
   width: 0,
   height: 200,
   lineWidth: 3,
+  eraseWidth: 10,
   lineStyle: "#000000",
   fillStyle: "#ffffff",
   lineCap: "round"
@@ -42,6 +40,7 @@ class SignName {
   isDrawing: boolean = false;
   historyList: PathType[] = [];
   recoverList: PathType[] = [];
+  defaultOption: OptionsType = { ...defaultOption };
   options: OptionsType = { ...defaultOption };
   ratio = 1;
   eraseMode: boolean = false;
@@ -62,7 +61,7 @@ class SignName {
     this.canvas.style.height = this.options.height + "px";
     this.ctx.fillStyle = this.options.fillStyle;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    this.create(this.canvas);
+    this.createEvent(this.canvas);
   }
 
   getContentDimensions = (element: HTMLElement) => {
@@ -95,7 +94,7 @@ class SignName {
     return () => el.removeEventListener(eventName, fn);
   };
 
-  create = (dom: HTMLCanvasElement) => {
+  createEvent = (dom: HTMLCanvasElement) => {
     this.addEvent(dom, "touchstart", (ev: MouseEvent) => this.onTouchstart(ev));
     this.addEvent(dom, "touchmove", (ev: MouseEvent) => this.onTouchmove(ev));
     this.addEvent(dom, "touchend", (ev: MouseEvent) => this.onTouchend(ev));
@@ -103,9 +102,9 @@ class SignName {
 
   private onTouchstart = (ev: MouseEvent) => {
     this.isDrawing = true;
-    const x = ev.clientX - this.canvas.offsetLeft;
-    const y = ev.clientY - this.canvas.offsetTop;
-    this.setErase(this.eraseMode);
+    const rect = this.canvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
     this.drawLine(x, y, false);
     this.recoverList = [];
     this.historyList.push({
@@ -113,21 +112,20 @@ class SignName {
       lineStyle: this.options.lineStyle,
       move: [x, y],
       line: [],
-      eraseMode: this.eraseMode
+      isErase: this.eraseMode,
+      eraseWidth: this.options.lineWidth
     });
   };
 
   private onTouchmove = (ev: MouseEvent) => {
-    const mx = ev.clientX - this.canvas.offsetLeft;
-    const my = ev.clientY - this.canvas.offsetTop;
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = ev.clientX - rect.left;
+    const my = ev.clientY - rect.top;
     if (this.isDrawing) {
       this.drawLine(mx, my, true);
       this.historyList[this.historyList.length - 1].line.push({
         x: mx,
-        y: my,
-        lineWidth: this.options.lineWidth,
-        lineStyle: this.options.lineStyle,
-        eraseMode: this.eraseMode
+        y: my
       });
     }
   };
@@ -143,8 +141,8 @@ class SignName {
       this.ctx.strokeStyle = this.options.lineStyle;
       this.ctx.lineCap = this.options.lineCap;
       this.ctx.lineJoin = "round";
-      this.ctx.moveTo(this.lastX * this.ratio, this.lastY * this.ratio);
-      this.ctx.lineTo(x * this.ratio, y * this.ratio);
+      this.ctx.moveTo(this.lastX, this.lastY);
+      this.ctx.lineTo(x, y);
       this.ctx.stroke();
       this.ctx.closePath();
     }
@@ -152,37 +150,89 @@ class SignName {
     this.lastY = y;
   };
 
-  updateOption = (options: Partial<OptionsType>) => {
-    Object.keys(options).forEach((key) => {
-      if (options[key]) this.options[key] = options[key];
-    });
+  // 设置canvas宽高
+  setCanvasSize = ({ width, height }) => {
+    if (width === this.canvas.width && height === this.canvas.height) return;
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = this.canvas.width;
+    tempCanvas.height = this.canvas.height;
+    const tempCtx = tempCanvas.getContext("2d") as CanvasRenderingContext2D;
+    tempCtx.drawImage(this.canvas, 0, 0);
+
+    const newWidth = width * this.ratio;
+    const newHeight = height * this.ratio;
+
+    this.options.width = newWidth;
+    this.options.height = newHeight;
+    this.canvas.width = width * this.ratio;
+    this.canvas.height = height * this.ratio;
+    this.canvas.style.width = width + "px";
+    this.canvas.style.height = height + "px";
+    this.ctx?.drawImage(tempCanvas, 0, 0);
   };
 
+  updateOption = (options: Partial<OptionsType>) => {
+    const fillStyle = this.options.fillStyle;
+    this.options = { ...this.options, ...options };
+    this.defaultOption = { ...this.defaultOption, ...options };
+    if (this.eraseMode) this.options.lineWidth = this.options.eraseWidth;
+    this.setCanvasSize(this.options);
+    if (fillStyle !== options.fillStyle) this.onRestore(); // 更新背景色
+  };
+
+  // 画布重置
   onRestore = (type?: "revoke" | "recover") => {
+    if (!this.ctx) return;
     const { width, height } = this.canvas;
     const { fillStyle } = this.options;
     if (type === "revoke") {
       const history = this.historyList.pop();
-      history && this.recoverList.push(history);
+      if (history) {
+        // 如果是擦除操作，存储的是“透明区域”，撤销时需要重新绘制被擦除的内容
+        if (history.isErase) {
+          // 方案1：重新绘制整个画布（简单但性能较差）
+          this.recoverList.push({ ...history, isRestoreErase: true });
+        } else {
+          this.recoverList.push(history);
+        }
+      }
     } else if (type === "recover") {
       const recover = this.recoverList.pop();
-      recover && this.historyList.push(recover);
+      if (recover) {
+        if (recover.isRestoreErase) {
+          // 重新应用擦除操作
+          this.historyList.push({ ...recover, isErase: true });
+        } else {
+          this.historyList.push(recover);
+        }
+      }
     }
+    // 重绘画布
     this.ctx.clearRect(0, 0, width * this.ratio, height * this.ratio);
-    this.ctx.fillStyle = fillStyle;
+    this.ctx.fillStyle = fillStyle; // 更新背景颜色
     this.ctx.fillRect(0, 0, width * this.ratio, height * this.ratio);
+    // 记录当前线宽和擦除类型
+    const tempLineWidth = this.options.lineWidth;
+    const tempEraseType = this.ctx.globalCompositeOperation;
+
     this.historyList.forEach((m) => {
       this.ctx.beginPath();
-      this.ctx.strokeStyle = m.lineStyle;
-      this.ctx.lineWidth = m.lineWidth * this.ratio;
-      this.setErase(m.eraseMode);
+      if (m.isErase) {
+        this.ctx.lineWidth = m.eraseWidth * this.ratio;
+        this.ctx.globalCompositeOperation = "destination-out";
+        // 任意颜色，因为 destination-out 会忽略它
+        this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+      } else {
+        this.ctx.lineWidth = m.lineWidth * this.ratio;
+        this.ctx.globalCompositeOperation = "source-over";
+        this.ctx.strokeStyle = m.lineStyle;
+      }
       this.ctx.moveTo(m.move[0] * this.ratio, m.move[1] * this.ratio);
-      m.line.forEach((v) => {
-        this.ctx.strokeStyle = v.lineStyle;
-        this.ctx.lineWidth = v.lineWidth * this.ratio;
-        this.ctx.lineTo(v.x * this.ratio, v.y * this.ratio);
-      });
+      m.line.forEach((v) => this.ctx.lineTo(v.x * this.ratio, v.y * this.ratio));
       this.ctx.stroke();
+      // 恢复当前线宽和擦除类型
+      this.options.lineWidth = tempLineWidth;
+      this.ctx.globalCompositeOperation = tempEraseType;
     });
   };
 
@@ -196,21 +246,26 @@ class SignName {
     this.options = { ...defaultOption };
   };
 
-  setErase = (eraseMode) => {
-    const eraseType = eraseMode ? "destination-out" : "source-over";
-    this.ctx.globalCompositeOperation = eraseType; // 橡皮擦
-  };
-
-  onEraser = (size = 10) => {
+  // 切换擦除模式, 并可以设置擦除大小
+  onEraser = (size) => {
+    const { eraseWidth, lineWidth } = this.defaultOption;
     this.eraseMode = !this.eraseMode;
-    this.options.lineWidth = defaultOption.lineWidth;
-    if (this.eraseMode) this.options.lineWidth = size; // 加粗橡皮擦
+    this.ctx.globalCompositeOperation = this.eraseMode ? "destination-out" : "source-over";
+    this.options.lineWidth = this.eraseMode ? size || eraseWidth : lineWidth;
     return this.eraseMode;
   };
 
   onExport = (mime = "image/png") => {
     const imgData = this.canvas.toDataURL(mime);
     return imgData;
+  };
+
+  onDownload = (filename = "sign.png", mime = "image/png") => {
+    const imgData = this.canvas.toDataURL(mime);
+    const a = document.createElement("a");
+    a.href = imgData;
+    a.download = filename;
+    a.click();
   };
 
   signStatus = () => {
